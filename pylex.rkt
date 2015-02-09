@@ -5,17 +5,7 @@
 ;;;(define output-endmarker? (error "implement me!"))
 ;;;(define (for-all pred? list) (error "implement me!"))
 ;;;(define (unget port) (error "implement me!"))
-(define-lex-abbrev NEWLINE (:: #\newline (union (:* #\space) (:* #\tab))))
-;;;(define current-spaces (error "implement me!"))
-;;;(define (reset-spaces!) (error "implement me!"))
-;;;(define (inc-spaces!) (error "implement me!"))
-;;;(define (inc-tab!) (error "implement me!"))
-(define indent-stack '())
-;;;(define (current-indent) (error "implement me!"))
-;;;(define (push-indent! spaces) (error "implement me!"))
-;;;(define (pop-indent!) (error "implement me!"))
-;;;(define (measure-spaces!) (error "implement me!"))
-;;;(define (pop-indents!) (error "implement me!"))
+(define-lex-abbrev NEWLINE (:: #\n))
 (define paren-stack '())
 (define (push-paren! char)
   (set! paren-stack (cons char paren-stack)))
@@ -68,26 +58,6 @@
 ;;;(define (xid-continue? char) (error "implement me!"))
 ;;;(define (id-lexer port rev-chars) (error "implement me!"))
 ;;;(define pylex (error "implement me!"))
-(define indent-lexer
-  (lexer
-   [#\tab 
-    (inc-tab!)
-    (indent-lexer input-port)
-   [#\space 
-    (inc-space!)
-    (indent-lexer input-port)]
-   [_ 
-    (cond
-    [(equal? (current-indent) current-spaces) ]
-    [(< (current-indent) current-spaces) (push-indent! current-spaces)]
-    [(> (current-indent) current-spaces) 
-     (define dedents (length (member current-spaces indent-stack)))
-     (if
-      (equal? 0 dedents)
-      (error "mismatched indents")
-      (pop-indents! (- dedents 1)))])
-    (basic-lexer input-port)]]))
-
 ;;;(define test (error "implement me!"))
 ;;;(define test-input (error "implement me!"))
 ;;;(define input (error "implement me!"))
@@ -98,18 +68,104 @@
 ;;;(define tokens (error "implement me!"))
 ;;;(for ((token tokens)) (write token) (newline))
 
+
+(define indent-stack '())
+
+(define current-spaces 0)
+
+(define (reset-spaces!) 
+  (set! current-spaces 0))
+
+(define (inc-spaces!) 
+  (set! current-spaces (+ current-spaces 1)))
+
+(define (inc-tab! input-port) 
+  (set! current-spaces (+ (- 8 (modulo count 8)) current-spaces)))
+
+(define (current-indent) 
+  (if
+   (empty? indent-stack)
+   0
+   (car indent-stack)))
+
+(define (pop-indent!)
+  (set! indent-stack (cdr indent-stack)))
+
+(define (pop-indents! number) 
+  (cond
+   [(< 0 number) (pop-indent!)
+                 (pop-indents! (- number 1))]))
+
+(define (generate-dedents number)
+  (if 
+   (< 1 number) 
+   (cons '(DEDENT) (generate-dedents (- number 1)))
+   (list '(DEDENT))))
+
+(define (push-indent!) 
+  (set! indent-stack (cons current-spaces indent-stack)))
+
+(define (measure-spaces! indent-string) 
+  (if 
+   (equal? (string-length indent-string) 0) 
+   count
+   (match (string-ref indent-string 0)
+     [#\space (measure-spaces! (substring indent-string 1)) 
+              (inc-spaces!)]
+     [#\tab (measure-spaces! (substring indent-string 1))
+            (inc-tab!)])))
+
+
+
+
+
+
+
+
+
+
+
+(define indent-lexer
+  (lexer
+   [(:* (union #\tab #\space)) 
+    (begin
+      (measure-spaces! lexeme)
+      (cond
+        [(equal? (current-indent) current-spaces) (basic-lexer input-port)]
+        [(< (current-indent) current-spaces) (push-indent!)
+                                             (reset-spaces!)
+                                             (cons (list 'INDENT) 
+                                                   (basic-lexer input-port))]
+        [(> (current-indent) current-spaces) 
+         (define dedents (member current-spaces indent-stack))
+         (cond 
+           [(list? dedents) (pop-indents! (- (length dedents) 1))
+                            (reset-spaces!)
+                            `(,@(generate-dedents (- (length dedents) 1)) ,@(basic-lexer input-port))]
+           [(equal? 0 current-spaces) (define number-pops (length indent-stack))
+                                      (pop-indents! number-pops)
+                                      (reset-spaces!)
+                                      `(,@(generate-dedents number-pops) ,@(basic-lexer input-port))]
+           [else (error "mismatched indents")])]))]))
+
+
+
+
+
+
+
 (define basic-lexer
   (lexer 
    [(eof)  (list)]
    
    [(repetition 1 +inf.0 (char-range #\a #\z))
-
+    
     (cons (list 'ID lexeme)
           (basic-lexer input-port))]
    
-   [(repetition 1 +inf.0 (union #\space #\newline))
-
-    (apply basic-lexer (list input-port))]
+   [(repetition 1 +inf.0 (:: (:* (union #\space #\tab)) #\newline))
+    (cons (list 'NEWLINE)
+          (indent-lexer input-port))]
    
    [decimalinteger 
     (cons (list 'LIT (string->number lexeme))
@@ -134,27 +190,23 @@
           (basic-lexer input-port))]
    
    [hash-comment 
+    (basic-lexer input-port)]
+   
+   [any-char 
     (basic-lexer input-port)]))
-   ;;;[NEWLINE 
-    ;;(cons (list 'NEWLINE)
-      ;;    (indent-lexer input-port))]))
 
 
-(define test-input-port (open-input-string "    foo 55 0x34 0b1011
-
-#who dat
-3.14
-
-10.
-.001 
+(define test-input-port (open-input-string 
+"foo
+  3.14
+10.0
+  10. 
+   .001  
 1e100
 3.14E-10
 0e0
 1.j
 # there what 1.2 233 ello
-
-bar   baz
-
-"))
+bar   baz"))
 
 (basic-lexer test-input-port)

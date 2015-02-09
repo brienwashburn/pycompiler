@@ -1,23 +1,10 @@
 #lang racket
-
-(define paren-stack '())
-
-(define (push-paren! char)
-  (set! paren-stack (cons char paren-stack)))
-
-(define (pop-paren! char)
-  (define top (car paren-stack))
-  (set! paren-stack (cdr paren-stack))
-  (match* {top char}
-    [{#\(  #\)}   (void)]
-    [{#\[  #\]}   (void)]
-    [{#\{  #\}}   (void)]
-    [{_    _}     (error "mismatched parens")]))
+(require parser-tools/lex)
+(require (prefix-in : parser-tools/lex-sre))
 
 ;;;(define (reset-spaces!) (error "implement me!"))
 ;;;(define (inc-spaces!) (error "implement me!"))
 ;;;(define (inc-tab!) (error "implement me!"))
-
 
 (define indent-stack '())
 
@@ -27,13 +14,16 @@
   (set! current-spaces 0))
 
 (define (inc-spaces!) 
-  (+ 1 current-spaces))
+  (set! current-spaces (+ current-spaces 1)))
 
-(define (inc-tab!) 
-  (+ (- 8 (modulo count 8)) current-spaces))
+(define (inc-tab! input-port) 
+  (set! current-spaces (+ (- 8 (modulo count 8)) current-spaces)))
 
 (define (current-indent) 
-  (car indent-stack))
+  (if
+   (empty? indent-stack)
+   0
+   (car indent-stack)))
 
 (define (push-indent! spaces) 
   (set! indent-stack (cons spaces indent-stack)))
@@ -53,7 +43,7 @@
   (define number-spaces (measure-spaces! spaces))
   (cond
     [(equal? (current-indent) number-spaces) ]
-    [(< (current-indent) number-spaces) (push-indent number-spaces)]
+    [(< (current-indent) number-spaces) (push-indent! number-spaces)]
     [(> (current-indent) number-spaces) 
      (define dedents (member number-spaces indent-stack))
      (if
@@ -67,37 +57,46 @@
 (define indent-lexer
   (lexer
    [#\tab 
-    (inc-tab!)
-    (indent-lexer input-port)
-   [(repitition 1 +inf.0 #\space)
-    (measure-spaces! lexeme)
-    (indent-lexer input-port)]
-   [_ 
+    (begin 
+      (inc-tab!)
+      (indent-lexer input-port))]
+   [#\space
+    (begin
+      (inc-spaces!)
+      (indent-lexer input-port))]
+   [any-char 
     (cond
     [(equal? (current-indent) current-spaces) ]
     [(< (current-indent) current-spaces) (push-indent! current-spaces)
                                          (cons (list 'INDENT) 
-                                               (basic-lexer input-port))]
+                                               (list 1 2 3))]
     [(> (current-indent) current-spaces) 
-     (define dedents (length (member current-spaces indent-stack)))
+     (define dedents (member current-spaces indent-stack))
      (if
-      (equal? 0 dedents)
-      (error "mismatched indents")
-      (pop-indents! (- dedents 1)))])
-    (basic-lexer input-port)]]))
+      (list? dedents)
+      (
+       ((pop-indents! (- (length dedents) 1))
+        (`(,@(generate-dedents (- (length dedents) 1)) (list 1 2 3)))))
+      (error "mismatched indents"))])]))
+
    
-(define (pop-paren! char)
-  (define top (car paren-stack))
-  (set! paren-stack (cdr paren-stack))
-  (match* {top char}
-    [{#\(  #\)}   (void)]
-    [{#\[  #\]}   (void)]
-    [{#\{  #\}}   (void)]
-    [{_    _}     (error "mismatched parens")]))
+(define (generate-dedents number)
+  (if 
+   (< 1 number) 
+   (cons '(DEDENT) (generate-dedents (- number 1)))
+   (list '(DEDENT))))
+   
 
 (define (pop-indent!)
   (set! indent-stack (cdr indent-stack)))
 
 (define (pop-indents! number) 
-  (for ([i number])
-    (pop-indent!)))
+  (pop-indent!)
+  (pop-indents! (- number 1)))
+
+
+;(define test-input-port (open-input-string "     foo 55 0x34 0b1011"))
+
+
+;(indent-lexer test-input-port)
+
