@@ -48,15 +48,6 @@
 ;;;(define-lex-abbrev string-quote (error "implement me!"))
 ;;;(define (unescape-string string #:is-byte (is-byte #f)) (error "implement me!"))
 ;;;(define (lex-raw-string end-quote port rev-chars) (error "implement me!"))
-;;;(define other-id-start-chars (error "implement me!"))
-;;;(define other-id-continue-chars (error "implement me!"))
-;;;(define (other-id-start? char) (error "implement me!"))
-;;;(define (other-id-continue? char) (error "implement me!"))
-;;;(define (id-start? char) (error "implement me!"))
-;;;(define (id-continue? char) (error "implement me!"))
-;;;(define (xid-start? char) (error "implement me!"))
-;;;(define (xid-continue? char) (error "implement me!"))
-;;;(define (id-lexer port rev-chars) (error "implement me!"))
 ;;;(define pylex (error "implement me!"))
 ;;;(define test (error "implement me!"))
 ;;;(define test-input (error "implement me!"))
@@ -67,8 +58,6 @@
 ;;;(set! input (open-input-string (port->string input)))
 ;;;(define tokens (error "implement me!"))
 ;;;(for ((token tokens)) (write token) (newline))
-
-
 (define indent-stack '())
 
 (define current-spaces 0)
@@ -125,6 +114,9 @@
 
 
 
+
+
+
 (define indent-lexer
   (lexer
    [(:* (union #\tab #\space)) 
@@ -154,11 +146,65 @@
 
 
 
+(define id-start-chars (list 'lu 'll ' lt 'lm 'nl))
+(define id-continue-chars (list 'mn 'mc 'nd 'pc 'po 'no))
+(define other-id-start-chars (list 'sm 'so 'sk))
+(define other-id-continue-chars (list 'po 'no))
+
+(define (id-start? char) 
+  (define category (char-general-category char))
+  (cond
+    [(list? (member category id-start-chars)) #t]
+    [(list? (member category other-id-start-chars)) #t]
+    [(char=? char #\_) #t]
+    [else #f]))
+
+(define (id-continue? char)
+  (define category (char-general-category char))
+  (cond
+    [(id-start? char) #t]
+    [(list? (member category id-continue-chars)) #t]
+    [(list? (member category other-id-continue-chars)) #t]
+    [else #f]))
+
+(define (xid-start? char) 
+    (define normalized (string-normalize-nfkc char))
+    (match (string->list normalized)
+      [(list (? id-start?) (? xid-continue?) ...) #t]
+      [else #f]))
+      
+(define (xid-continue? char) 
+    (define normalized (string-normalize-nfkc char))
+    (match (string->list normalized)
+      [(list (? id-continue?) ...) #t]
+      [else #f]))
+
+
+
+(define (id-lexwrap port rev-chars)
+  (define id-lexer
+    (lexer
+     [any-char
+      (cond
+        [(xid-continue? lexeme) (id-lexwrap port (string-append rev-chars lexeme))]
+        [else (begin 
+                (unget port)
+                (cons (list 'ID rev-chars)
+                      (basic-lexer port)))])]))
+  (id-lexer port))
+
+
+
+
+(define (unget port)
+  (file-position port (- (file-position port) 1)))
+
+
 (define basic-lexer
   (lexer 
    [(eof)  (list)]
    
-   [(repetition 1 +inf.0 (char-range #\a #\z))
+   #;[(repetition 1 +inf.0 (char-range #\a #\z))
     
     (cons (list 'ID lexeme)
           (basic-lexer input-port))]
@@ -193,11 +239,13 @@
     (basic-lexer input-port)]
    
    [any-char 
-    (basic-lexer input-port)]))
+    (cond
+      [(xid-start? lexeme) (id-lexwrap input-port lexeme)]
+      [else (basic-lexer input-port)])]))
 
 
 (define test-input-port (open-input-string 
-"foo
+"_oo
   3.14
 10.0
   10. 
@@ -207,6 +255,7 @@
 0e0
 1.j
 # there what 1.2 233 ello
-bar   baz"))
+bar   baz
+"))
 
 (basic-lexer test-input-port)
