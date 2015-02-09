@@ -148,14 +148,14 @@
 
 (define id-start-chars (list 'lu 'll ' lt 'lm 'nl))
 (define id-continue-chars (list 'mn 'mc 'nd 'pc 'po 'no))
-(define other-id-start-chars (list 'sm 'so 'sk))
-(define other-id-continue-chars (list 'po 'no))
+(define other-id-start-chars (list #\u2118 #\u212E #\u309 #\u309B #\u309C))
+(define other-id-continue-chars (list #\u00B7 #\u0387 #\u1369 #\u1370 #\u1371 #\u19DA))
 
 (define (id-start? char) 
   (define category (char-general-category char))
   (cond
     [(list? (member category id-start-chars)) #t]
-    [(list? (member category other-id-start-chars)) #t]
+    [(list? (member char other-id-start-chars)) #t]
     [(char=? char #\_) #t]
     [else #f]))
 
@@ -164,7 +164,7 @@
   (cond
     [(id-start? char) #t]
     [(list? (member category id-continue-chars)) #t]
-    [(list? (member category other-id-continue-chars)) #t]
+    [(list? (member char other-id-continue-chars)) #t]
     [else #f]))
 
 (define (xid-start? char) 
@@ -209,6 +209,10 @@
     (cons (list 'ID lexeme)
           (basic-lexer input-port))]
    
+   [#\= 
+    (cons (list 'PUNCT lexeme)
+          (basic-lexer input-port))]
+   
    [(repetition 1 +inf.0 (:: (:* (union #\space #\tab)) #\newline))
     (cons (list 'NEWLINE)
           (indent-lexer input-port))]
@@ -248,17 +252,21 @@
 
 
 (define test-input-port (open-input-string 
-"_oo
+"_oo=bax
   3.14
 10.0
   10. 
-   .001  
+       .001  
+           345               
+                  456 
+                         567
+
 1e100
 3.14E-10
 0e0
 1.j
 # there what 1.2 233 ello
-bar   baz
+bar=baz
 "))
 
 (basic-lexer test-input-port)
