@@ -4,7 +4,6 @@
 (require (prefix-in : parser-tools/lex-sre))
 ;;;(define output-endmarker? (error "implement me!"))
 ;;;(define (for-all pred? list) (error "implement me!"))
-;;;(define (unget port) (error "implement me!"))
 (define-lex-abbrev NEWLINE (:: #\n))
 
 (define paren-stack '())
@@ -78,21 +77,14 @@
 ;;;(define tokens (error "implement me!"))
 ;;;(for ((token tokens)) (write token) (newline))
 
-(define keyword-list '("False"   "class"     "finally"  "is"        "return"
-                       "None"    "continue"  "for"      "lambda"    "try"     
-                       "True"    "def"       "from"     "nonlocal"  "while"
-                       "and"     "del"       "global"   "not"       "with"
-                       "as"      "elif"      "if"       "or"        "yield"
-                       "assert"  "else"      "import"   "pass"      "break"      
-                       "except"  "in"        "raise"))
 
+;;;;;;;;;; indent lexing ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define indent-stack '())
 
 (define current-spaces 0)
 
 (define (reset-spaces!) 
   (set! current-spaces 0))
-
 
 
 (define (inc-spaces!) 
@@ -135,11 +127,6 @@
             (inc-tab!)])))
 
 
-  
-  
-  
-  
-  
 (define indent-lexer
   (lexer
    [(:* (union #\tab #\space)) 
@@ -168,7 +155,7 @@
 
 
 
-
+;;;;;;;;;;;;;;;; id lexer ;;;;;;;;;;;;;;;;;;;;
 (define id-start-chars (list 'lu 'll ' lt 'lm 'nl))
 (define id-continue-chars (list 'mn 'mc 'nd 'pc 'po 'no))
 (define other-id-start-chars (list #\u2118 #\u212E #\u309 #\u309B #\u309C))
@@ -211,7 +198,7 @@
       (cond
         [(xid-continue? lexeme) (id-lexer port (string-append rev-chars lexeme))]
         [else (begin 
-                (unget port)
+                (unget port 1)
                 (cons (list 'ID rev-chars)
                       (basic-lexer port)))])]))
   (id-lexer-wrap port))
@@ -219,19 +206,25 @@
 
 
 
-(define (unget port)
-  (file-position port (- (file-position port) 1)))
+(define (unget port length)
+  (file-position port (- (file-position port) length)))
+(define (advance port length)
+  (file-position port (+ (file-position port) length)))
 
 
 
 
+
+;;;;string literal lexer 
 (define-lex-abbrev stringliteral (:: (repetition 0 1 stringprefix) (union shortstring longstring)))
 (define-lex-abbrev stringprefix (union #\r #\u #\R #\U))
-(define-lex-abbrev shortstring (union (:: #\' (:* shortstringitem) #\') (:: #\" (:* shortstringitem) #\")))
-(define-lex-abbrev longstring (union (:: #\' #\' #\' (:* longstringitem) #\' #\' #\') (:: #\" #\" #\" (:* longstringitem) #\" #\" #\")))
-(define-lex-abbrev shortstringitem (union shortstringchar stringescapeseq))
+(define-lex-abbrev shortstring (union (:: #\' (:* shortstringitemsinglequote) #\') (:: #\" (:* shortstringitemdoublequote) #\")))
+(define-lex-abbrev longstring (union (:: #\' #\' #\' (:* (intersection longstringitem (complement (:: #\' #\' #\')))) #\' #\' #\') (:: #\" #\" #\" (:* (intersection longstringitem (complement (:: #\" #\" #\")))) #\" #\" #\"))) -need to change so that longstringitem can't have three wuotes in the middle
+(define-lex-abbrev shortstringitemsinglequote (union shortstringcharsinglequote stringescapeseq))
+(define-lex-abbrev shortstringitemdoublequote (union shortstringchardoublequote stringescapeseq))
 (define-lex-abbrev longstringitem (union longstringchar stringescapeseq))
-(define-lex-abbrev shortstringchar (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\")))
+(define-lex-abbrev shortstringcharsinglequote (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\')))
+(define-lex-abbrev shortstringchardoublequote (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\")))
 (define-lex-abbrev longstringchar (intersection any-char (char-complement #\\)))
 (define-lex-abbrev stringescapeseq (:: #\\ any-char))
 
@@ -245,18 +238,48 @@
 (define-lex-abbrev longbyteschar (intersection (char-range #\u0 #\u127) (char-complement #\\)))
 (define-lex-abbrev bytesescapeseq (:: #\\ (char-range #\u0 #\u127)))
 
+(define-lex-abbrev quote-markers (union #\" #\' (:: #\" #\" #\") (:: #\' #\' #\')))
+(define-lex-abbrev unicode-name (:: #\\ #\N #\{ (:+ (intersection any-char (char-complement #\}))) #\}))
+(define closing-seq "\"")
+(define string-mode "")
 
-(define (string-lexer port rev-chars)
-  (define string-lexer-wrap
+(define initial-string-lexer
     (lexer
-     [any-char
-      (cond
-        [(xid-continue? lexeme) (id-lexer port (string-append rev-chars lexeme))]
-        [else (begin 
-                (unget port)
-                (cons (list 'ID rev-chars)
-                      (basic-lexer port)))])]))
-  (string-lexer-wrap port))
+     [quote-markers (begin
+                      (set! closing-seq lexeme)
+                      (define-lex-abbrev closing-seq-lex closing-seq)
+                      (cond
+                        [(equal? string-mode "r") (raw-string-lexer input-port)]
+                        [else (normal-string-lexer input-port "")]))]
+     [stringprefix (cond
+                     [(equal? (string-downcase lexeme) "r") (begin 
+                                                              (set! string-mode "r")
+                                                              (initial-string-lexer input-port))]
+                     [else (initial-string-lexer input-port)])])) 
+
+
+  (define raw-string-lexer
+    (lexer
+     [(:* shortstringitemdoublequote)
+      (begin
+        (advance input-port (string-length closing-seq))
+        (cons (list 'LIT lexeme)
+              (basic-lexer input-port)))]))
+
+
+(define (normal-string-lexer port literal)
+  (define normal-lexer-inside
+    (lexer
+     #;[unicode-name 
+      (begin
+        (define thang (SEARCH A DICTIONARY (string-downcase (substring lexeme 3 (- (length lexeme) 1)))))
+        (string? thang))]
+     [(:* shortstringitemdoublequote)
+      (begin
+        (advance input-port (string-length closing-seq))
+        (cons (list 'LIT lexeme)
+              (basic-lexer input-port)))]))
+  (normal-lexer-inside port))
 
 
 
@@ -312,9 +335,10 @@
    [hash-comment 
     (basic-lexer input-port)]
    
-   [stringliteral
-    (cons (list 'LIT lexeme)
-          (basic-lexer input-port))]
+   [stringliteral (begin
+                    (unget input-port (string-length lexeme))
+                    lexeme)]
+                    ;(initial-string-lexer input-port))]
    
    [any-char 
     (cond
@@ -339,7 +363,8 @@ face
 
 place
 
-foo=\"help me !\"
+foo=\"\"\"help me ! \"\"\"
+butt=r\"\"\"help me ! \"\"\"
 1e100
 3.14E-10
 0e0
