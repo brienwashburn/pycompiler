@@ -6,9 +6,12 @@
 ;;;(define (for-all pred? list) (error "implement me!"))
 ;;;(define (unget port) (error "implement me!"))
 (define-lex-abbrev NEWLINE (:: #\n))
+
 (define paren-stack '())
+
 (define (push-paren! char)
   (set! paren-stack (cons char paren-stack)))
+
 (define (pop-paren! char)
   (define top (car paren-stack))
   (set! paren-stack (cdr paren-stack))
@@ -17,9 +20,22 @@
     [{#\[  #\]}   (void)]
     [{#\{  #\}}   (void)]
     [{_    _}     (error "mismatched parens")]))
+
 ;;;(define (whitespace-ignored?) (error "implement me!"))
 (define-lex-abbrev hash-comment (:: #\# (:* (char-complement #\newline)) #\newline))
-;;;(define-lex-abbrev keyword (error "implement me!"))
+
+(define-lex-abbrev keyword (union "False"   "class"      "finally"     "is"  
+                                  "return"  "None"       "continue"    "for"      
+                                  "lambda"   "try"       "True"        "def"       
+                                  "from"     "nonlocal"  "while"       "and"     
+                                  "del"      "global"    "not"         "with"
+                                  "as"       "elif"      "if"          "or"
+                                  "yield"    "assert"    "else"        "import"
+                                  "pass"     "break"     "except"      "in"        
+                                  "raise"))
+
+
+
 ;;;(define-lex-abbrev operator (error "implement me!"))
 ;;;(define-lex-abbrev delimiter (error "implement me!"))
 (define-lex-abbrev nonzerodigit (char-range #\1 #\9))
@@ -54,16 +70,30 @@
 ;;;(define input (error "implement me!"))
 ;;;(define (port->list port) (error "implement me!"))
 ;;;(define (port->string port) (error "implement me!"))
+  
+  ; So I need to check to see if the item is contained inside of the keyword list, and if
+  ; it is we are going to then emit the K 
 ;;;(match (current-command-line-arguments) ((vector "-n") (set! output-endmarker? #f) (set! input (current-input-port))) ((vector (or "--test" "--drracket")) (set! input test-input)) ((vector file-name) (set! input (open-input-file file-name))) ((vector) (set! input (current-input-port))))
 ;;;(set! input (open-input-string (port->string input)))
 ;;;(define tokens (error "implement me!"))
 ;;;(for ((token tokens)) (write token) (newline))
+
+(define keyword-list '("False"   "class"     "finally"  "is"        "return"
+                       "None"    "continue"  "for"      "lambda"    "try"     
+                       "True"    "def"       "from"     "nonlocal"  "while"
+                       "and"     "del"       "global"   "not"       "with"
+                       "as"      "elif"      "if"       "or"        "yield"
+                       "assert"  "else"      "import"   "pass"      "break"      
+                       "except"  "in"        "raise"))
+
 (define indent-stack '())
 
 (define current-spaces 0)
 
 (define (reset-spaces!) 
   (set! current-spaces 0))
+
+
 
 (define (inc-spaces!) 
   (set! current-spaces (+ current-spaces 1)))
@@ -105,18 +135,11 @@
             (inc-tab!)])))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+  
+  
+  
+  
+  
 (define indent-lexer
   (lexer
    [(:* (union #\tab #\space)) 
@@ -217,6 +240,9 @@
     (cons (list 'NEWLINE)
           (indent-lexer input-port))]
    
+   [keyword 
+    (cons (list 'KEYWORD lexeme) (basic-lexer input-port))]
+        
    [decimalinteger 
     (cons (list 'LIT (string->number lexeme))
           (basic-lexer input-port))]
@@ -231,6 +257,7 @@
    [bininteger
     (cons (list 'LIT (string->number (substring lexeme 2) 2))
           (basic-lexer input-port))]
+   
    [floatnumber
     (cons (list 'LIT (string->number lexeme))
           (basic-lexer input-port))]
@@ -253,6 +280,7 @@
 
 (define test-input-port (open-input-string 
 "_oo=bax
+face
   3.14
 10.0
   10. 
@@ -261,6 +289,7 @@
                   456 
                          567
 
+place
 1e100
 3.14E-10
 0e0
