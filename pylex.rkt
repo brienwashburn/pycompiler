@@ -219,7 +219,8 @@
 (define-lex-abbrev stringliteral (:: (repetition 0 1 stringprefix) (union shortstring longstring)))
 (define-lex-abbrev stringprefix (union #\r #\u #\R #\U))
 (define-lex-abbrev shortstring (union (:: #\' (:* shortstringitemsinglequote) #\') (:: #\" (:* shortstringitemdoublequote) #\")))
-(define-lex-abbrev longstring (union (:: #\' #\' #\' (:* (intersection longstringitem (complement (:: #\' #\' #\')))) #\' #\' #\') (:: #\" #\" #\" (:* (intersection longstringitem (complement (:: #\" #\" #\")))) #\" #\" #\"))) -need to change so that longstringitem can't have three wuotes in the middle
+(define-lex-abbrev longstring (union (:: #\' #\' #\' (complement (:: (:* longstringitem) (:: #\' #\' #\') (:* longstringitem))) #\' #\' #\') 
+                                     (:: #\" #\" #\" (complement (:: (:* longstringitem) (:: #\" #\" #\") (:* longstringitem)))  #\" #\" #\")))
 (define-lex-abbrev shortstringitemsinglequote (union shortstringcharsinglequote stringescapeseq))
 (define-lex-abbrev shortstringitemdoublequote (union shortstringchardoublequote stringescapeseq))
 (define-lex-abbrev longstringitem (union longstringchar stringescapeseq))
@@ -234,14 +235,16 @@
 (define-lex-abbrev longbytes (union (:: #\' #\' #\' (:* longbytesitem) #\' #\' #\') (:: #\" #\" #\" (:* longbytesitem) #\" #\" #\")))
 (define-lex-abbrev shortbytesitem (union shortbyteschar bytesescapeseq))
 (define-lex-abbrev longbytesitem (union longbyteschar bytesescapeseq))
-(define-lex-abbrev shortbyteschar (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\"))) ;;; NOT SURE ABOUT WHAT QUOTE
+(define-lex-abbrev shortbyteschar (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\")))
 (define-lex-abbrev longbyteschar (intersection (char-range #\u0 #\u127) (char-complement #\\)))
 (define-lex-abbrev bytesescapeseq (:: #\\ (char-range #\u0 #\u127)))
 
 (define-lex-abbrev quote-markers (union #\" #\' (:: #\" #\" #\") (:: #\' #\' #\')))
-(define-lex-abbrev unicode-name (:: #\\ #\N #\{ (:+ (intersection any-char (char-complement #\}))) #\}))
+(define-lex-abbrev unicode-name (:: #\\ #\N #\{ (:+ (char-complement #\})) #\}))
 (define closing-seq "\"")
 (define string-mode "")
+
+(define name-to-unicode #hash(("latin capital letter j" . "\u004A")))
 
 (define initial-string-lexer
     (lexer
@@ -249,7 +252,7 @@
                       (set! closing-seq lexeme)
                       (define-lex-abbrev closing-seq-lex closing-seq)
                       (cond
-                        [(equal? string-mode "r") (raw-string-lexer input-port)]
+                        [(equal? string-mode "r") (raw-string-lexer input-port "")]
                         [else (normal-string-lexer input-port "")]))]
      [stringprefix (cond
                      [(equal? (string-downcase lexeme) "r") (begin 
@@ -257,29 +260,42 @@
                                                               (initial-string-lexer input-port))]
                      [else (initial-string-lexer input-port)])])) 
 
-
-  (define raw-string-lexer
+(define (raw-string-lexer port rev-chars)
+  (define raw-string-lexer-inner
     (lexer
-     [(:* shortstringitemdoublequote)
-      (begin
-        (advance input-port (string-length closing-seq))
-        (cons (list 'LIT lexeme)
-              (basic-lexer input-port)))]))
+     [(:* (intersection (complement quote-markers) (char-complement #\\)))
+      (raw-string-lexer input-port (string-append rev-chars lexeme))]
+     [quote-markers 
+      (cond 
+        [(equal? closing-seq lexeme) 
+         (cons (list 'LIT rev-chars)
+               (basic-lexer input-port))]
+        [else (raw-string-lexer input-port (string-append rev-chars lexeme))])]
+      [(:: #\\ any-char)
+       (raw-string-lexer input-port (string-append rev-chars lexeme))]))
+
+  (raw-string-lexer-inner port))
 
 
-(define (normal-string-lexer port literal)
+(define (normal-string-lexer port rev-chars)
   (define normal-lexer-inside
     (lexer
-     #;[unicode-name 
-      (begin
-        (define thang (SEARCH A DICTIONARY (string-downcase (substring lexeme 3 (- (length lexeme) 1)))))
-        (string? thang))]
-     [(:* shortstringitemdoublequote)
-      (begin
-        (advance input-port (string-length closing-seq))
-        (cons (list 'LIT lexeme)
-              (basic-lexer input-port)))]))
+     [(:* (intersection (complement quote-markers) (char-complement #\\)))
+      (normal-string-lexer input-port (string-append rev-chars lexeme))]
+     [quote-markers 
+      (cond 
+        [(equal? closing-seq lexeme) 
+         (cons (list 'LIT rev-chars)
+               (basic-lexer input-port))]
+        [else (normal-string-lexer input-port (string-append rev-chars lexeme))])]
+      [(:: #\\ any-char)
+       (normal-string-lexer input-port (string-append rev-chars lexeme))]
+     [unicode-name 
+        (begin
+          (normal-string-lexer input-port 
+                               (string-append rev-chars (dict-ref name-to-unicode (string-downcase (substring lexeme 3 (- (string-length lexeme) 1)))))))]))
   (normal-lexer-inside port))
+
 
 
 
@@ -337,8 +353,7 @@
    
    [stringliteral (begin
                     (unget input-port (string-length lexeme))
-                    lexeme)]
-                    ;(initial-string-lexer input-port))]
+                    (initial-string-lexer input-port))]
    
    [any-char 
     (cond
@@ -363,7 +378,7 @@ face
 
 place
 
-foo=\"\"\"help me ! \"\"\"
+foo=\"help me \\N{latin capital letter j}' ! \"
 butt=r\"\"\"help me ! \"\"\"
 1e100
 3.14E-10
