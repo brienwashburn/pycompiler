@@ -504,6 +504,12 @@ s = \"foo\
 
 
 fact(20)")))
+(define (output dalist)
+  (cond
+    [(equal? 0 (length dalist)) (void)]
+    [else (begin (write (car dalist)) (newline)
+                 (output (cdr dalist)))]))
 
 
-(initial-lexer input)
+(output (initial-lexer input))
+
