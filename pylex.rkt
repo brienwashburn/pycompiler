@@ -233,7 +233,7 @@
      [(eof) 
       (cond
         [(equal? 0 (string-length rev-chars)) (cons (list 'ENDMARKER) (list))]
-        [else (cons (list 'ID rev-chars) (cons (list 'ENDMARKER) (list)))])]))
+        [else (cons (list 'ID (string-normalize-nfkc rev-chars)) (cons (list 'ENDMARKER) (list)))])]))
   (id-lexer-wrap port))
 
 
