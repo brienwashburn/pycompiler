@@ -413,11 +413,11 @@
     (basic-lexer input-port)]
    
    [(:: keyword (:+ (union #\space #\tab)))
-    (cons (list 'KEYWORD (string->symbol lexeme)) 
+    (cons (list 'KEYWORD (string->symbol (string-trim lexeme))) 
           (basic-lexer input-port))]
    
    [(:: (union operators delimiters) (:+ (union #\space #\tab)))
-    (cons (list 'PUNCT lexeme)
+    (cons (list 'PUNCT (string-trim lexeme))
           (basic-lexer input-port))]
    
    [open-paren
