@@ -2,7 +2,7 @@
 
 (require parser-tools/lex)
 (require (prefix-in : parser-tools/lex-sre))
-(define output-endmarker? #t)
+(define output-endmarker? #f)
 ;;;(define (for-all pred? list) (error "implement me!"))
 (define-lex-abbrev NEWLINE (:: #\n))
 
@@ -73,7 +73,7 @@
 (define data (open-input-file "data.txt"))
 (define (build-hash input)
   (cond 
-    [(< (length input) 1) ]
+    [(< (length input) 1) (void)]
     [else (begin 
             (define line (string-split (car input) ":"))
             (hash-set! name-to-unicode (string-downcase (cadr line)) (string (integer->char (string->number (car line) 16))))
