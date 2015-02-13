@@ -390,7 +390,9 @@
 (define initial-lexer 
   (lexer 
    [(:* (:: (:* (union #\space #\tab hash-comment)) (union #\newline)))
-    (basic-lexer input-port)]))
+    (basic-lexer input-port)]
+   [(eof)  
+    (cons (list 'ENDMARKER) (list))]))
 
 
 
@@ -412,15 +414,18 @@
    [(:: #\\ #\newline)
     (basic-lexer input-port)]
    
-   [(:: keyword any-char)
-    (cond 
-      [(xid-continue? (substring lexeme (- (string-length lexeme) 1))) (begin
-                                                                         (unget input-port (string-length lexeme))
-                                                                         (id-lexer input-port ""))]
-      [else (begin 
-              (unget input-port 1)
-              (cons (list 'KEYWORD (string->symbol (substring lexeme 0 (- (string-length lexeme) 1))))
-                    (basic-lexer input-port)))])]
+   [keyword (begin
+              (define next (peek-string 1 0 input-port))
+              (cond 
+                [(eof-object? next) (cons (list 'KEYWORD (string->symbol lexeme))
+                                          (cons (list 'NEWLINE)
+                                                (basic-lexer input-port)))]
+                [(xid-continue? next) (begin 
+                                        (unget (string-length lexeme))
+                                        (id-lexer lexeme))]
+                [else (cons (list 'KEYWORD (string->symbol lexeme))
+                            (basic-lexer input-port))]))]
+
    
    [(union operators delimiters)
     (cons (list 'PUNCT (string-trim lexeme))
@@ -485,13 +490,13 @@
 
 
 (define test-input-port (open-input-string (string-append 
-"False")))
+"")))
 (define (output dalist)
   (cond
     [(equal? 0 (length dalist)) (void)]
     [else (begin (write (car dalist)) (newline)
                  (output (cdr dalist)))]))
 
+(output (initial-lexer test-input-port))
 
-(output (initial-lexer (open-input-string (string-append (port->string input) "\n"))))
 
