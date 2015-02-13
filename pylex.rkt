@@ -332,8 +332,36 @@
          (cons (list 'LIT rev-chars)
                (white-space-lexer input-port))]
         [else (normal-string-lexer input-port (string-append rev-chars lexeme))])]
-      [(:: #\\ any-char)
-       (normal-string-lexer input-port (string-append rev-chars lexeme))]
+     [(:: #\\ "newline")    
+      (normal-string-lexer input-port (string-append rev-chars "\newline"))] 
+     [(:: #\\ #\\)    
+      (normal-string-lexer input-port (string-append rev-chars "\\"))]
+     [(:: #\\ "a")    
+      (normal-string-lexer input-port (string-append rev-chars "\a"))]
+     [(:: #\\ "'")    
+      (normal-string-lexer input-port (string-append rev-chars "'"))]
+     [(:: #\\ "\"")    
+      (normal-string-lexer input-port (string-append rev-chars "\""))]
+     [(:: #\\ "b")    
+      (normal-string-lexer input-port (string-append rev-chars "\b"))]
+     [(:: #\\ "f")    
+      (normal-string-lexer input-port (string-append rev-chars "\f"))]
+     [(:: #\\ "n")    
+      (normal-string-lexer input-port (string-append rev-chars "\n"))]
+     [(:: #\\ "r")    
+      (normal-string-lexer input-port (string-append rev-chars "\r"))]
+     [(:: #\\ "t")    
+      (normal-string-lexer input-port (string-append rev-chars "\t"))]
+     [(:: #\\ "v")    
+      (normal-string-lexer input-port (string-append rev-chars "\v"))]
+     [(:: #\\ (repetition 3 3 octdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
+     [(:: #\\ #\x (repetition 2 2 hexdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
+     [(:: #\\ #\u (repetition 4 4 hexdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
+     [(:: #\\ #\U (repetition 8 8 hexdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [unicode-name 
         (begin
           (normal-string-lexer input-port 
@@ -385,8 +413,36 @@
          (cons (list 'LIT rev-chars)
                (white-space-lexer input-port))]
         [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
-      [(:: #\\ any-char)
-       (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+       [(:: #\\ "newline")    
+      (normal-string-lexer input-port (string-append rev-chars "\newline"))] 
+     [(:: #\\ #\\)    
+      (normal-string-lexer input-port (string-append rev-chars "\\"))]
+     [(:: #\\ "a")    
+      (normal-string-lexer input-port (string-append rev-chars "\a"))]
+     [(:: #\\ "'")    
+      (normal-string-lexer input-port (string-append rev-chars "'"))]
+     [(:: #\\ "\"")    
+      (normal-string-lexer input-port (string-append rev-chars "\""))]
+     [(:: #\\ "b")    
+      (normal-string-lexer input-port (string-append rev-chars "\b"))]
+     [(:: #\\ "f")    
+      (normal-string-lexer input-port (string-append rev-chars "\f"))]
+     [(:: #\\ "n")    
+      (normal-string-lexer input-port (string-append rev-chars "\n"))]
+     [(:: #\\ "r")    
+      (normal-string-lexer input-port (string-append rev-chars "\r"))]
+     [(:: #\\ "t")    
+      (normal-string-lexer input-port (string-append rev-chars "\t"))]
+     [(:: #\\ "v")    
+      (normal-string-lexer input-port (string-append rev-chars "\v"))]
+     [(:: #\\ (repetition 3 3 octdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
+     [(:: #\\ #\x (repetition 2 2 hexdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
+     [(:: #\\ #\u (repetition 4 4 hexdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
+     [(:: #\\ #\U (repetition 8 8 hexdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [unicode-name 
         (begin
           (normal-bytestring-lexer input-port 
@@ -400,7 +456,7 @@
 (define initial-lexer 
   (lexer 
    [(:* (:: (:* (union #\space #\u000C #\tab hash-comment)) #\newline))
-    (basic-lexer input-port)]
+    (indent-lexer input-port)]
    [(eof)  
     (cons (list 'ENDMARKER) (list))]))
 
@@ -408,9 +464,7 @@
 
 (define white-space-lexer
   (lexer
-   [(eof)  
-    (cons (list 'NEWLINE)
-          (cons (list 'ENDMARKER) (list)))]
+   [(eof) (indent-lexer input-port)]
    [(:+ (union #\space #\tab #\u000C hash-comment))
     (begin
       (define next (peek-string 1 0 input-port))
