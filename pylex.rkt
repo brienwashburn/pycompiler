@@ -412,11 +412,11 @@
    [(:: #\\ #\newline)
     (basic-lexer input-port)]
    
-   [keyword 
+   [(:: keyword (:+ (union #\space #\tab)))
     (cons (list 'KEYWORD (string->symbol lexeme)) 
           (basic-lexer input-port))]
    
-   [(union operators delimiters) 
+   [(:: (union operators delimiters) (:+ (union #\space #\tab)))
     (cons (list 'PUNCT lexeme)
           (basic-lexer input-port))]
    
