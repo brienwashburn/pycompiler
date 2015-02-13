@@ -135,9 +135,9 @@
 
 (define (generate-dedents number)
   (if 
-   (< 0 number) 
+   (< 1 number) 
    (cons '(DEDENT) (generate-dedents (- number 1)))
-   (list)))
+   (list '(DEDENT))))
 
 (define (push-indent!) 
   (set! indent-stack (cons current-spaces indent-stack)))
@@ -170,11 +170,11 @@
          (cond 
            [(list? dedents) (pop-indents! (- (length dedents) 1))
                             (reset-spaces!)
-                            (flatten (list (generate-dedents (- (length dedents) 1)) (basic-lexer input-port)))]
+                            `(,@(generate-dedents (- (length dedents) 1)) ,@(basic-lexer input-port))]
            [(equal? 0 current-spaces) (define number-pops (length indent-stack))
                                       (pop-indents! number-pops)
                                       (reset-spaces!)
-                                      (flatten (list (generate-dedents number-pops) (basic-lexer input-port)))]
+                                      `(,@(generate-dedents number-pops) ,@(basic-lexer input-port))]
            [else (error "mismatched indents")])]))]
    
    [(eof) (begin
@@ -182,7 +182,9 @@
             (define number-pops (length indent-stack))
             (pop-indents! number-pops)
             (reset-spaces!)
-            (list (flatten (list (generate-dedents number-pops) (list 'ENDMARKER)))))]))
+            (cond 
+              [(< 0 number-pops) `(,@(generate-dedents number-pops) ,@(cons (list 'ENDMARKER) (list)))]
+              [else (cons (list 'ENDMARKER) (list))]))]))
 
 
 
