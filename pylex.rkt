@@ -375,17 +375,27 @@
                       (cond
                         [(equal? string-mode "r") (raw-bytestring-lexer input-port "")]
                         [else (normal-bytestring-lexer input-port "")]))]
-     [bytesprefix (cond
-                     [(equal? (string-downcase lexeme) "r") (begin 
-                                                              (set! string-mode "r")
-                                                              (initial-bytestring-lexer input-port))]
-                     [else (initial-bytestring-lexer input-port)])])) 
+     [bytesprefix (begin
+                    (define thangalang "")
+                    (if 
+                     (string? lexeme)
+                     (set! thangalang lexeme)
+                     (set! thangalang (string lexeme)))
+                    (cond 
+                      [(equal? (string-downcase (string (string-ref thangalang 0))) "r") (begin 
+                                                                                  (set! string-mode "r")
+                                                                                  (initial-bytestring-lexer input-port))]
+                      [(and (< 1 (string-length lexeme)) 
+                            (equal? (string-downcase (string (string-ref thangalang 1))) "r")) (begin 
+                                                                                        (set! string-mode "r")
+                                                                                        (initial-bytestring-lexer input-port))]
+                      [else (initial-bytestring-lexer input-port)]))])) 
 
 
 (define (raw-bytestring-lexer port rev-chars)
   (define raw-bytestring-lexer-inner
     (lexer
-     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-range #\u0 #\u127)))
+     [(:* (intersection (complement quote-markers) (char-range #\u0 #\u127)))
       (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
@@ -393,8 +403,6 @@
          (cons (list 'LIT rev-chars)
                (white-space-lexer input-port))]
         [else (raw-bytestring-lexer input-port (string-append rev-chars lexeme))])]
-      [(:: #\\ any-char)
-       (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]
       [any-char
       (error "ya dun fucked up")]))
 
@@ -412,6 +420,32 @@
          (cons (list 'LIT rev-chars)
                (white-space-lexer input-port))]
         [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
+     [(:: #\\ "newline")    
+      (normal-string-lexer input-port (string-append rev-chars "\newline"))] 
+     [(:: #\\ #\\)    
+      (normal-string-lexer input-port (string-append rev-chars "\\"))]
+     [(:: #\\ "a")    
+      (normal-string-lexer input-port (string-append rev-chars "\a"))]
+     [(:: #\\ "'")    
+      (normal-string-lexer input-port (string-append rev-chars "'"))]
+     [(:: #\\ "\"")    
+      (normal-string-lexer input-port (string-append rev-chars "\""))]
+     [(:: #\\ "b")    
+      (normal-string-lexer input-port (string-append rev-chars "\b"))]
+     [(:: #\\ "f")    
+      (normal-string-lexer input-port (string-append rev-chars "\f"))]
+     [(:: #\\ "n")    
+      (normal-string-lexer input-port (string-append rev-chars "\n"))]
+     [(:: #\\ "r")    
+      (normal-string-lexer input-port (string-append rev-chars "\r"))]
+     [(:: #\\ "t")    
+      (normal-string-lexer input-port (string-append rev-chars "\t"))]
+     [(:: #\\ "v")    
+      (normal-string-lexer input-port (string-append rev-chars "\v"))]
+     [(:: #\\ (repetition 3 3 octdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
+     [(:: #\\ #\x (repetition 2 2 hexdigit))    
+      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [any-char
       (error "ya dun fucked up")]))
   (normal-bytelexer-inside port))
@@ -548,5 +582,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/whitespace.dedent.py")))
+;(output (initial-lexer (open-input-file "test.py")))
 
