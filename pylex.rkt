@@ -15,14 +15,15 @@
   (define top (car paren-stack))
   (set! paren-stack (cdr paren-stack))
   (match* {top char}
-    [{#\(  #\)}   (void)]
-    [{#\[  #\]}   (void)]
-    [{#\{  #\}}   (void)]
+    [{"(" ")"}   (void)]
+    [{"["  "]"}   (void)]
+    [{"{"  "}"}   (void)]
     [{_    _}     (error "mismatched parens")]))
 
 ;;;(define (whitespace-ignored?) (error "implement me!"))
 (define-lex-abbrev hash-comment (:: #\# (:* (char-complement #\newline)) #\newline))
-
+(define-lex-abbrev open-paren (union #\( #\[ #\{))
+(define-lex-abbrev close-paren (union #\) #\] #\}))
 (define-lex-abbrev keyword (union "False"   "class"      "finally"     "is"  
                                   "return"  "None"       "continue"    "for"      
                                   "lambda"   "try"       "True"        "def"       
@@ -32,6 +33,16 @@
                                   "yield"    "assert"    "else"        "import"
                                   "pass"     "break"     "except"      "in"        
                                   "raise"))
+
+(define-lex-abbrev operators (union "+"      "-"      "*"      "**"     "/"
+                                    "//"     "%"      "<<"     ">>"     "&"      
+                                    "|"      "^"      "~"      "<"      ">"      
+                                    "<="     "="      "=="     "!="     "<>"))
+
+(define-lex-abbrev delimiters (union ","       ":"       "."       ";"       "@"
+                                     "="       "->"      "+="      "-="      "*=" 
+                                     "/="      "//="     "%="      "&="      "|="
+                                     "^="      ">>="     "<<="     "**="     "..."))
 
 
 
@@ -57,6 +68,18 @@
 (define-lex-abbrev fraction (:: #\. (:+ digit)))
 (define-lex-abbrev exponent (:: (:or #\e #\E) (:* (:or #\+ #\-)) (:+ digit)))
 (define-lex-abbrev imagnumber (:: (:or floatnumber intpart) (:or #\j #\J)))
+
+(define name-to-unicode (make-hash))
+(define data (open-input-file "data.txt"))
+(define (build-hash input)
+  (cond 
+    [(< (length input) 1) ]
+    [else (begin 
+            (define line (string-split (car input) ":"))
+            (hash-set! name-to-unicode (string-downcase (cadr line)) (string (integer->char (string->number (car line) 16))))
+            (build-hash (cdr input)))]))
+
+(build-hash (port->lines data))
 ;;;(define unicode-name=>integer (error "implement me!"))
 ;;;(define (char-for-unicode-name name) (error "implement me!"))
 ;;;(define (char-for string) (error "implement me!"))
@@ -139,7 +162,7 @@
                                              (cons (list 'INDENT) 
                                                    (basic-lexer input-port))]
         [(> (current-indent) current-spaces) 
-         (define dedents (member current-spaces indent-stack))
+         (define dedents (member current-spaces (reverse indent-stack)))
          (cond 
            [(list? dedents) (pop-indents! (- (length dedents) 1))
                             (reset-spaces!)
@@ -148,7 +171,10 @@
                                       (pop-indents! number-pops)
                                       (reset-spaces!)
                                       `(,@(generate-dedents number-pops) ,@(basic-lexer input-port))]
-           [else (error "mismatched indents")])]))]))
+           [else (error "mismatched indents")])]))]
+   
+   [(eof)  
+    (cons (list 'ENDMARKER) (list))]))
 
 
 
@@ -224,8 +250,8 @@
 (define-lex-abbrev shortstringitemsinglequote (union shortstringcharsinglequote stringescapeseq))
 (define-lex-abbrev shortstringitemdoublequote (union shortstringchardoublequote stringescapeseq))
 (define-lex-abbrev longstringitem (union longstringchar stringescapeseq))
-(define-lex-abbrev shortstringcharsinglequote (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\')))
-(define-lex-abbrev shortstringchardoublequote (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\")))
+(define-lex-abbrev shortstringcharsinglequote (intersection any-char (char-complement #\\)  (char-complement #\')))
+(define-lex-abbrev shortstringchardoublequote (intersection any-char (char-complement #\\)  (char-complement #\")))
 (define-lex-abbrev longstringchar (intersection any-char (char-complement #\\)))
 (define-lex-abbrev stringescapeseq (:: #\\ any-char))
 
@@ -243,8 +269,6 @@
 (define-lex-abbrev unicode-name (:: #\\ #\N #\{ (:+ (char-complement #\})) #\}))
 (define closing-seq "\"")
 (define string-mode "")
-
-(define name-to-unicode #hash(("latin capital letter j" . "\u004A")))
 
 (define initial-string-lexer
     (lexer
@@ -307,23 +331,40 @@
 
 (define basic-lexer
   (lexer 
-   [(eof)  (list)]
+   [(eof)  
+    (cons (list 'ENDMARKER) (list))]
    
-   #;[(repetition 1 +inf.0 (char-range #\a #\z))
-    
-    (cons (list 'ID lexeme)
-          (basic-lexer input-port))]
+   [(:* (union #\space #\tab))
+    (basic-lexer input-port)]
    
-   [#\= 
-    (cons (list 'PUNCT lexeme)
-          (basic-lexer input-port))]
+   [(:+ (:: (:* (union #\space #\tab)) (union #\newline #\u000D)))
+    (cond
+      [(empty? paren-stack) (cons (list 'NEWLINE)
+                                  (indent-lexer input-port))]
+      [else (basic-lexer input-port)])]
    
-   [(repetition 1 +inf.0 (:: (:* (union #\space #\tab)) #\newline))
-    (cons (list 'NEWLINE)
-          (indent-lexer input-port))]
+   [(:: #\\ #\newline)
+    (basic-lexer input-port)]
    
    [keyword 
-    (cons (list 'KEYWORD lexeme) (basic-lexer input-port))]
+    (cons (list 'KEYWORD (string->symbol lexeme)) 
+          (basic-lexer input-port))]
+   
+   [(union operators delimiters) 
+    (cons (list 'PUNCT (string->symbol lexeme))
+          (basic-lexer input-port))]
+   
+   [open-paren
+    (begin 
+      (push-paren! lexeme)
+      (cons (list 'PUNCT lexeme)
+            (basic-lexer input-port)))]
+   
+   [close-paren
+    (begin 
+      (pop-paren! lexeme)
+      (cons (list 'PUNCT lexeme)
+            (basic-lexer input-port)))]
         
    [decimalinteger 
     (cons (list 'LIT (string->number lexeme))
@@ -345,7 +386,7 @@
           (basic-lexer input-port))]
    
    [imagnumber
-    (cons (list 'LIT (string->number lexeme))
+    (cons (list 'LIT (string->number (string-append "0+" (substring lexeme 0 (- (string-length lexeme) 1)) "i")))
           (basic-lexer input-port))]
    
    [hash-comment 
@@ -355,37 +396,61 @@
                     (unget input-port (string-length lexeme))
                     (initial-string-lexer input-port))]
    
+   [(union #\$ #\? #\`)
+    (error lexeme)]
+   
    [any-char 
     (cond
       [(xid-start? lexeme) (id-lexer input-port lexeme)]
-      [else (basic-lexer input-port)])]))
+      [else lexeme])]))
 
 
 
 
 
-(define test-input-port (open-input-string 
-"_oo=bax
-face
-  3.14
-10.0
-  10. 
-       .001  
-           345               
-                  456 
-                         567
+(define test-input-port (open-input-string (string-append "# Comment 1
+ # Comment 2
 
+# Factorial:
 
-place
+def fact(  x\
+):
 
-foo=\"help me \\N{latin capital letter j}' ! \"
-butt=r\"\"\"help me ! \"\"\"
-1e100
-3.14E-10
-0e0
-1.j
-# there what 1.2 233 ello
-bar=baz
-"))
+  if x == -1:
+    return 1.j
+    fars = \"hello \\N{LATIN CAPITAL LETTER J}\"
 
+  elif x ==0:
+
+    return 1
+  else:
+
+        return x* fact(x
+
+- 1)
+
+s = \"" (string #\\ #\\ #\space #\\ #\n #\\ #\' #\\ #\" #\"))))
+
+#;(string-append "# Comment 1
+ # Comment 2
+
+# Factorial:
+
+def fact(  x\
+):
+
+  if x == -1:
+    fars = \"hello \\N{LATIN CAPITAL LETTER J}\"
+    return 1.j
+
+  elif x ==0:
+
+    return 1
+  else:
+
+        return x* fact(x
+
+- 1)
+
+s = " (string #\\ #\\ #\space #\\ #\n #\\ #\' #\\ #\" #\"))
 (basic-lexer test-input-port)

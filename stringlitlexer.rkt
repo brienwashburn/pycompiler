@@ -81,8 +81,6 @@
         (string? thang)
         ]
 
-(define (someshit port)
-  'whatthefuck)
 
 (define test-input-port (open-input-string "\"hellhghgjghjhjo\""))
 
