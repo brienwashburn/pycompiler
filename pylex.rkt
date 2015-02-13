@@ -56,6 +56,7 @@
                                    (char-range #\a #\f)
                                    (char-range #\A #\F)))
 ;;;(define (hex-digit? char) (error "implement me!"))
+(define-lex-abbrev integer (union decimalinteger octinteger hexinteger bininteger))
 (define-lex-abbrev bindigit (union #\0 #\1))
 (define-lex-abbrev octinteger (:: #\0 (:or #\o #\O) (:+ octdigit)))
 (define-lex-abbrev hexinteger (:: #\0 (:or #\x #\X) (:+ hexdigit)))
@@ -471,6 +472,10 @@
     (cons (list 'LIT (string->number lexeme))
           (white-space-lexer input-port))]
    
+   [(repetition 2 +inf.0 integer)
+    (error "nuh uh")]
+                
+   
    [hexinteger
     (cons (list 'LIT (string->number (substring lexeme 2) 16))
           (white-space-lexer input-port))]
@@ -520,5 +525,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/nkfc-not-id-start.py")))
+;(output (initial-lexer (open-input-file "tests/number.leading-zeros.py")))
 
