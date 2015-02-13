@@ -286,6 +286,7 @@
 (define-lex-abbrev bytesescapeseq (:: #\\ (char-range #\u0 #\u127)))
 
 (define-lex-abbrev quote-markers (union #\" #\' (:: #\" #\" #\") (:: #\' #\' #\')))
+
 (define-lex-abbrev unicode-name (:: #\\ #\N #\{ (:+ (char-complement #\})) #\}))
 (define closing-seq "\"")
 (define string-mode "")
@@ -316,7 +317,10 @@
                (white-space-lexer input-port))]
         [else (raw-string-lexer input-port (string-append rev-chars lexeme))])]
      [#\newline
-      (error "newline in string, error")]
+      (cond
+        [(equal? closing-seq "'''") (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [(equal? closing-seq "\"\"\"") (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [else (error "newline in string, error")])]
      [(:: #\\ any-char)
       (raw-string-lexer input-port (string-append rev-chars lexeme))]))
   (raw-string-lexer-inner port))
@@ -364,7 +368,9 @@
      [(:: #\\ #\U (repetition 8 8 hexdigit))    
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [#\newline
-      (error "newline in string, error")]
+      (cond
+        [(equal? closing-seq (or "\"\"\"" "'''")) (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [else (error "newline in string, error")])]
      [unicode-name 
         (begin
           (normal-string-lexer input-port 
@@ -406,11 +412,13 @@
      [quote-markers 
       (cond 
         [(equal? closing-seq lexeme) 
-         (cons (list 'LIT (string->symbol (string-append  (apply bytes (map char->integer (string->list rev-chars))))))
+         (cons (list 'LIT (apply bytes (map char->integer (string->list rev-chars))))
                (white-space-lexer input-port))]
         [else (raw-bytestring-lexer input-port (string-append rev-chars lexeme))])]
      [#\newline
-      (error "newline in string, error")]
+      (cond
+        [(equal? closing-seq (or "\"\"\"" "'''")) (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [else (error "newline in string, error")])]
       [any-char
       (error "ya dun fucked up")]))
 
@@ -425,7 +433,7 @@
      [quote-markers 
       (cond 
         [(equal? closing-seq lexeme) 
-         (cons ((list 'LIT (string->symbol   (apply bytes (map char->integer (string->list rev-chars))))))
+         (cons (list 'LIT (apply bytes (map char->integer (string->list rev-chars))))
                (white-space-lexer input-port))]
         [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
      [(:: #\\ "newline")    
@@ -455,7 +463,9 @@
      [(:: #\\ #\x (repetition 2 2 hexdigit))    
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [#\newline
-      (error "newline in string, error")]
+      (cond
+        [(equal? closing-seq (or "\"\"\"" "'''")) (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [else (error "newline in string, error")])]
      [any-char
       (error "ya dun fucked up")]))
   (normal-bytelexer-inside port))
@@ -592,5 +602,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/string.newline-error.py")))
+;(output (initial-lexer (open-input-file "tests/string.raw-newline.py")))
 
