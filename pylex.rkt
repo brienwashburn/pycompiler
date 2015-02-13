@@ -176,8 +176,12 @@
                                       `(,@(generate-dedents number-pops) ,@(basic-lexer input-port))]
            [else (error "mismatched indents")])]))]
    
-   [(eof)  
-    (cons (list 'ENDMARKER) (list))]))
+   [(eof) (begin
+            (set! current-spaces 0)
+            (define number-pops (length indent-stack))
+            (pop-indents! number-pops)
+            (reset-spaces!)
+            `(,@(generate-dedents number-pops) ,@(cons (list 'ENDMARKER) (list))))]))
 
 
 
@@ -408,7 +412,7 @@
       (define next (peek-string 1 0 input-port))
       (cond 
         [(eof-object? next) (cons (list 'NEWLINE)
-                                  (basic-lexer input-port))]
+                                  (indent-lexer input-port))]
         [else (basic-lexer input-port)]))]
    [(:+ (:: (:* (union #\space #\tab #\u000C hash-comment))#\newline))
     (cons (list 'NEWLINE)
@@ -511,5 +515,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/id.nkfc-not-id-start.py")))
+;(output (initial-lexer (open-input-file "tests/whitespace.blank.py")))
 
