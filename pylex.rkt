@@ -227,7 +227,7 @@
         [(xid-continue? lexeme) (id-lexer port (string-append rev-chars lexeme))]
         [else (begin 
                 (unget port 1)
-                (cons (list 'ID rev-chars)
+                (cons (list 'ID (string-normalize-nfkc rev-chars))
                       (basic-lexer port)))])]
      
      [(eof) 
