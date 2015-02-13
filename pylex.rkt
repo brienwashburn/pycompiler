@@ -70,7 +70,7 @@
 (define-lex-abbrev imagnumber (:: (:or floatnumber intpart) (:or #\j #\J)))
 
 (define name-to-unicode (make-hash))
-(define data (open-input-file "data.txt"))
+(define data (open-input-file "~/compiler/data.txt"))
 (define (build-hash input)
   (cond 
     [(< (length input) 1) (void)]
