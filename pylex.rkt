@@ -92,12 +92,12 @@
 (define input "")
 ;;(define (port->list port) (error "implement me!"))
 ;;(define (port->string port) (error "implement me!"))
-#;(match 
+(match 
     (current-command-line-arguments) 
-  ((vector "-n") (set! output-endmarker? #f) (set! input (current-input-port))) 
-  ((vector (or "--test" "--drracket")) (set! input test-input)) 
-  ((vector file-name) (set! input (open-input-file file-name))) 
-  ((vector) (set! input (current-input-port))))
+    ((vector "-n") (set! output-endmarker? #f) (set! input (current-input-port))) 
+    ((vector (or "--test" "--drracket")) (set! input test-input)) 
+    ((vector file-name) (set! input (open-input-file file-name))) 
+    ((vector) (set! input (current-input-port))))
 ;(set! input (open-input-string (port->string input)))
 ;;;(define tokens (error "implement me!"))
 ;;;(for ((token tokens)) (write token) (newline))
@@ -485,9 +485,7 @@
 
 
 (define test-input-port (open-input-string (string-append 
-"class;     #buddfudds
-def pass True \
-False")))
+"False")))
 (define (output dalist)
   (cond
     [(equal? 0 (length dalist)) (void)]
@@ -495,5 +493,5 @@ False")))
                  (output (cdr dalist)))]))
 
 
-(output (initial-lexer test-input-port))
+(output (initial-lexer (open-input-string (string-append (port->string input) "\n"))))
 
