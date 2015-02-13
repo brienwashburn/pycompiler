@@ -318,8 +318,8 @@
         [else (raw-string-lexer input-port (string-append rev-chars lexeme))])]
      [#\newline
       (cond
-        [(equal? closing-seq "'''") (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
-        [(equal? closing-seq "\"\"\"") (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [(equal? closing-seq "'''") (raw-string-lexer input-port (string-append rev-chars lexeme))]
+        [(equal? closing-seq "\"\"\"") (raw-string-lexer input-port (string-append rev-chars lexeme))]
         [else (error "newline in string, error")])]
      [(:: #\\ any-char)
       (raw-string-lexer input-port (string-append rev-chars lexeme))]))
@@ -369,7 +369,8 @@
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [#\newline
       (cond
-        [(equal? closing-seq (or "\"\"\"" "'''")) (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [(equal? closing-seq "'''") (normal-string-lexer input-port (string-append rev-chars lexeme))]
+        [(equal? closing-seq "\"\"\"") (normal-string-lexer input-port (string-append rev-chars lexeme))]
         [else (error "newline in string, error")])]
      [unicode-name 
         (begin
@@ -417,7 +418,8 @@
         [else (raw-bytestring-lexer input-port (string-append rev-chars lexeme))])]
      [#\newline
       (cond
-        [(equal? closing-seq (or "\"\"\"" "'''")) (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [(equal? closing-seq "'''") (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [(equal? closing-seq "\"\"\"") (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]
         [else (error "newline in string, error")])]
       [any-char
       (error "ya dun fucked up")]))
@@ -426,7 +428,7 @@
 
 
 (define (normal-bytestring-lexer port rev-chars)
-  (define normal-bytelexer-inside
+  (define normal-bytestring-lexer-inside
     (lexer
      [(:* (intersection (complement quote-markers) (char-complement #\\) (char-range #\u0 #\u127) (char-complement #\newline)))
       (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
@@ -437,38 +439,39 @@
                (white-space-lexer input-port))]
         [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
      [(:: #\\ "newline")    
-      (normal-string-lexer input-port (string-append rev-chars "\newline"))] 
+      (normal-bytestring-lexer input-port (string-append rev-chars "\newline"))] 
      [(:: #\\ #\\)    
-      (normal-string-lexer input-port (string-append rev-chars "\\"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\\"))]
      [(:: #\\ "a")    
-      (normal-string-lexer input-port (string-append rev-chars "\a"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\a"))]
      [(:: #\\ "'")    
-      (normal-string-lexer input-port (string-append rev-chars "'"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "'"))]
      [(:: #\\ "\"")    
-      (normal-string-lexer input-port (string-append rev-chars "\""))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\""))]
      [(:: #\\ "b")    
-      (normal-string-lexer input-port (string-append rev-chars "\b"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\b"))]
      [(:: #\\ "f")    
-      (normal-string-lexer input-port (string-append rev-chars "\f"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\f"))]
      [(:: #\\ "n")    
-      (normal-string-lexer input-port (string-append rev-chars "\n"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\n"))]
      [(:: #\\ "r")    
-      (normal-string-lexer input-port (string-append rev-chars "\r"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\r"))]
      [(:: #\\ "t")    
-      (normal-string-lexer input-port (string-append rev-chars "\t"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\t"))]
      [(:: #\\ "v")    
-      (normal-string-lexer input-port (string-append rev-chars "\v"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\v"))]
      [(:: #\\ (repetition 3 3 octdigit))    
-      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
+      (normal-bytestring-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
      [(:: #\\ #\x (repetition 2 2 hexdigit))    
-      (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
+      (normal-bytestring-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [#\newline
       (cond
-        [(equal? closing-seq (or "\"\"\"" "'''")) (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [(equal? closing-seq "'''") (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+        [(equal? closing-seq "\"\"\"") (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
         [else (error "newline in string, error")])]
      [any-char
       (error "ya dun fucked up")]))
-  (normal-bytelexer-inside port))
+  (normal-bytestring-lexer-inside port))
 
 
 
