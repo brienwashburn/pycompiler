@@ -149,12 +149,13 @@
      [#\space (measure-spaces! (substring indent-string 1)) 
               (inc-spaces!)]
      [#\tab (measure-spaces! (substring indent-string 1))
-            (inc-tab!)])))
+            (inc-tab!)]
+     [#\u000C (measure-spaces! (substring indent-string 1))])))
 
 
 (define indent-lexer
   (lexer
-   [(:* (union #\tab #\space)) 
+   [(:* (union #\tab #\space #\u000C )) 
     (begin
       (measure-spaces! lexeme)
       (cond
@@ -390,7 +391,7 @@
 
 (define initial-lexer 
   (lexer 
-   [(:* (:: (:* (union #\space #\tab hash-comment)) #\newline))
+   [(:* (:: (:* (union #\space #\u000C #\tab hash-comment)) #\newline))
     (basic-lexer input-port)]
    [(eof)  
     (cons (list 'ENDMARKER) (list))]))
@@ -402,14 +403,14 @@
    [(eof)  
     (cons (list 'NEWLINE)
           (cons (list 'ENDMARKER) (list)))]
-   [(:+ (union #\space #\tab hash-comment))
+   [(:+ (union #\space #\tab #\u000C hash-comment))
     (begin
       (define next (peek-string 1 0 input-port))
       (cond 
         [(eof-object? next) (cons (list 'NEWLINE)
                                   (basic-lexer input-port))]
         [else (basic-lexer input-port)]))]
-   [(:+ (:: (:* (union #\space #\tab hash-comment))#\newline))
+   [(:+ (:: (:* (union #\space #\tab #\u000C hash-comment))#\newline))
     (cons (list 'NEWLINE)
           (indent-lexer input-port))]
    [any-char
@@ -449,7 +450,7 @@
     (begin 
       (push-paren! lexeme)
       (cons (list 'PUNCT lexeme)
-            (basic-lexer input-port)))]
+            (white-space-lexer input-port)))]
    
    [close-paren
     (begin 
@@ -494,7 +495,7 @@
    [any-char 
     (cond
       [(xid-start? lexeme) (id-lexer input-port lexeme)]
-      [else (error)])]))
+      [else (list)])]))
 
 
 
@@ -510,5 +511,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/id.basic.py")))
+;(output (initial-lexer (open-input-file "tests/whitespace.weird.py")))
 
