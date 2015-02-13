@@ -70,7 +70,7 @@
 (define-lex-abbrev imagnumber (:: (:or floatnumber intpart) (:or #\j #\J)))
 
 (define name-to-unicode (make-hash))
-(define data (open-input-file "~/compiler/data.txt"))
+(define data (open-input-file "data.txt"))
 (define (build-hash input)
   (cond 
     [(< (length input) 1) (void)]
@@ -230,8 +230,10 @@
                 (cons (list 'ID rev-chars)
                       (basic-lexer port)))])]
      
-     [(eof)  
-    (cons (list 'ENDMARKER) (list))]))
+     [(eof) 
+      (cond
+        [(equal? 0 (string-length rev-chars)) (cons (list 'ENDMARKER) (list))]
+        [else (cons (list 'ID rev-chars) (cons (list 'ENDMARKER) (list)))])]))
   (id-lexer-wrap port))
 
 
