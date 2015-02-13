@@ -130,13 +130,14 @@
 (define (pop-indents! number) 
   (cond
    [(< 0 number) (pop-indent!)
-                 (pop-indents! (- number 1))]))
+                 (pop-indents! (- number 1))]
+   [else (void)]))
 
 (define (generate-dedents number)
   (if 
-   (< 1 number) 
+   (< 0 number) 
    (cons '(DEDENT) (generate-dedents (- number 1)))
-   (list '(DEDENT))))
+   (list)))
 
 (define (push-indent!) 
   (set! indent-stack (cons current-spaces indent-stack)))
@@ -169,11 +170,11 @@
          (cond 
            [(list? dedents) (pop-indents! (- (length dedents) 1))
                             (reset-spaces!)
-                            `(,@(generate-dedents (- (length dedents) 1)) ,@(basic-lexer input-port))]
+                            (list (flatten (list (generate-dedents (- (length dedents) 1)) (basic-lexer input-port))))]
            [(equal? 0 current-spaces) (define number-pops (length indent-stack))
                                       (pop-indents! number-pops)
                                       (reset-spaces!)
-                                      `(,@(generate-dedents number-pops) ,@(basic-lexer input-port))]
+                                      (list (flatten (list (generate-dedents number-pops) (basic-lexer input-port))))]
            [else (error "mismatched indents")])]))]
    
    [(eof) (begin
@@ -181,7 +182,7 @@
             (define number-pops (length indent-stack))
             (pop-indents! number-pops)
             (reset-spaces!)
-            `(,@(generate-dedents number-pops) ,@(cons (list 'ENDMARKER) (list))))]))
+            (list (flatten (list (generate-dedents number-pops) (list 'ENDMARKER)))))]))
 
 
 
@@ -515,5 +516,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/whitespace.blank.py")))
+;(output (initial-lexer (open-input-file "tests/id.basic.py")))
 
