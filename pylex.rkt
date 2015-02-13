@@ -21,7 +21,7 @@
     [{_    _}     (error "mismatched parens")]))
 
 ;;;(define (whitespace-ignored?) (error "implement me!"))
-(define-lex-abbrev hash-comment (:+ (:: #\# (:* (char-complement #\newline)) #\newline)))
+(define-lex-abbrev hash-comment (:+ (:: #\# (:* (char-complement #\newline)))))
 (define-lex-abbrev open-paren (union #\( #\[ #\{))
 (define-lex-abbrev close-paren (union #\) #\] #\}))
 (define-lex-abbrev keyword (union "False"   "class"      "finally"     "is"  
@@ -92,13 +92,13 @@
 (define input "")
 ;;(define (port->list port) (error "implement me!"))
 ;;(define (port->string port) (error "implement me!"))
-(match 
+#;(match 
     (current-command-line-arguments) 
   ((vector "-n") (set! output-endmarker? #f) (set! input (current-input-port))) 
   ((vector (or "--test" "--drracket")) (set! input test-input)) 
   ((vector file-name) (set! input (open-input-file file-name))) 
   ((vector) (set! input (current-input-port))))
-(set! input (open-input-string (port->string input)))
+;(set! input (open-input-string (port->string input)))
 ;;;(define tokens (error "implement me!"))
 ;;;(for ((token tokens)) (write token) (newline))
 
@@ -403,7 +403,7 @@
    [(:* (union #\space #\tab))
     (basic-lexer input-port)]
    
-   [(:+ (:: (:* (union #\space #\tab hash-comment)) (union #\newline)))
+   [(:+ (:: (:* (union #\space #\tab hash-comment)) #\newline))
     (cond
       [(empty? paren-stack) (cons (list 'NEWLINE)
                                   (indent-lexer input-port))]
@@ -461,7 +461,7 @@
     (cons (list 'LIT (string->number (string-append "0+" (substring lexeme 0 (- (string-length lexeme) 1)) "i")))
           (basic-lexer input-port))]
    
-   [hash-comment 
+   #;[hash-comment 
     (basic-lexer input-port)]
    
    [stringliteral (begin
@@ -485,31 +485,8 @@
 
 
 (define test-input-port (open-input-string (string-append 
-"# Comment 1
- # Comment 2
-
-# Factorial:
-
-def fact(  x\
-):
-
-  if x == -1:
-    return 1.j
-
-  elif x ==0:
-
-    return 1
-  else:
-
-        return x* fact(x
-
-- 1)
-
-s = \"foo\
-\\ \n\'\"
-
-
-fact(20)")))
+"class;     #buddfudds
+sdfds ")))
 (define (output dalist)
   (cond
     [(equal? 0 (length dalist)) (void)]
@@ -517,5 +494,5 @@ fact(20)")))
                  (output (cdr dalist)))]))
 
 
-(output (initial-lexer input))
+(output (initial-lexer test-input-port))
 
