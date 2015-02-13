@@ -497,6 +497,6 @@
     [else (begin (write (car dalist)) (newline)
                  (output (cdr dalist)))]))
 
-(output (initial-lexer test-input-port))
+(output (initial-lexer input))
 
 
