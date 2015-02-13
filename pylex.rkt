@@ -400,7 +400,7 @@
      [quote-markers 
       (cond 
         [(equal? closing-seq lexeme) 
-         (cons (list 'LIT (string->symbol (string-append "#" "\"" rev-chars "\"")))
+         (cons (list 'LIT (string->symbol (string-append "\u12#" "\"" rev-chars "\"")))
                (white-space-lexer input-port))]
         [else (raw-bytestring-lexer input-port (string-append rev-chars lexeme))])]
       [any-char
@@ -417,7 +417,7 @@
      [quote-markers 
       (cond 
         [(equal? closing-seq lexeme) 
-         (cons ((list 'LIT (string->symbol (string-append "#" "\"" rev-chars "\""))))
+         (cons ((list 'LIT (string->symbol (string-append "\12#" "\"" rev-chars "\""))))
                (white-space-lexer input-port))]
         [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
      [(:: #\\ "newline")    
@@ -578,7 +578,7 @@
 (define (output dalist)
   (cond
     [(equal? 0 (length dalist)) (void)]
-    [else (begin (display (car dalist)) (newline)
+    [else (begin (write (car dalist)) (newline)
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
