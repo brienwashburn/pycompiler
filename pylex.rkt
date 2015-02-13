@@ -315,6 +315,8 @@
          (cons (list 'LIT rev-chars)
                (white-space-lexer input-port))]
         [else (raw-string-lexer input-port (string-append rev-chars lexeme))])]
+     [#\newline
+      (error "newline in string, error")]
      [(:: #\\ any-char)
       (raw-string-lexer input-port (string-append rev-chars lexeme))]))
   (raw-string-lexer-inner port))
@@ -361,6 +363,8 @@
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [(:: #\\ #\U (repetition 8 8 hexdigit))    
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
+     [#\newline
+      (error "newline in string, error")]
      [unicode-name 
         (begin
           (normal-string-lexer input-port 
@@ -405,6 +409,8 @@
          (cons (list 'LIT (string->symbol (string-append  (apply bytes (map char->integer (string->list rev-chars))))))
                (white-space-lexer input-port))]
         [else (raw-bytestring-lexer input-port (string-append rev-chars lexeme))])]
+     [#\newline
+      (error "newline in string, error")]
       [any-char
       (error "ya dun fucked up")]))
 
@@ -448,6 +454,8 @@
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
      [(:: #\\ #\x (repetition 2 2 hexdigit))    
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
+     [#\newline
+      (error "newline in string, error")]
      [any-char
       (error "ya dun fucked up")]))
   (normal-bytelexer-inside port))
