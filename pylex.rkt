@@ -2,7 +2,7 @@
 
 (require parser-tools/lex)
 (require (prefix-in : parser-tools/lex-sre))
-;;;(define output-endmarker? (error "implement me!"))
+(define output-endmarker? #t)
 ;;;(define (for-all pred? list) (error "implement me!"))
 (define-lex-abbrev NEWLINE (:: #\n))
 
@@ -88,15 +88,12 @@
 ;;;(define (lex-raw-string end-quote port rev-chars) (error "implement me!"))
 ;;;(define pylex (error "implement me!"))
 ;;;(define test (error "implement me!"))
-;;;(define test-input (error "implement me!"))
-;;;(define input (error "implement me!"))
-;;;(define (port->list port) (error "implement me!"))
-;;;(define (port->string port) (error "implement me!"))
-  
-  ; So I need to check to see if the item is contained inside of the keyword list, and if
-  ; it is we are going to then emit the K 
-;;;(match (current-command-line-arguments) ((vector "-n") (set! output-endmarker? #f) (set! input (current-input-port))) ((vector (or "--test" "--drracket")) (set! input test-input)) ((vector file-name) (set! input (open-input-file file-name))) ((vector) (set! input (current-input-port))))
-;;;(set! input (open-input-string (port->string input)))
+(define test-input "")
+(define input "")
+;;(define (port->list port) (error "implement me!"))
+;;(define (port->string port) (error "implement me!"))
+(match (current-command-line-arguments) ((vector "-n") (set! output-endmarker? #f) (set! input (current-input-port))) ((vector (or "--test" "--drracket")) (set! input test-input)) ((vector file-name) (set! input (open-input-file file-name))) ((vector) (set! input (current-input-port))))
+(set! input (open-input-string (port->string input)))
 ;;;(define tokens (error "implement me!"))
 ;;;(for ((token tokens)) (write token) (newline))
 
