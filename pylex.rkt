@@ -450,7 +450,7 @@
      [(:: #\\ "f")    
       (normal-bytestring-lexer input-port (string-append rev-chars "\f"))]
      [(:: #\\ "n")    
-      (normal-bytestring-lexer input-port (string-append rev-chars "\newline"))]
+      (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
      [(:: #\\ "r")    
       (normal-bytestring-lexer input-port (string-append rev-chars "\r"))]
      [(:: #\\ "t")    
