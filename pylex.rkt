@@ -509,6 +509,6 @@ f(3)")))
     [else (begin (write (car dalist)) (newline)
                  (output (cdr dalist)))]))
 
-;(output (initial-lexer (open-input-string (port->string input))))
-(output (initial-lexer test-input-port))
+(output (initial-lexer (open-input-string (port->string input))))
+;(output (initial-lexer test-input-port))
 
