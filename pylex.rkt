@@ -37,7 +37,8 @@
 (define-lex-abbrev operators (union "+"      "-"      "*"      "**"     "/"
                                     "//"     "%"      "<<"     ">>"     "&"      
                                     "|"      "^"      "~"      "<"      ">"      
-                                    "<="     "="      "=="     "!="     "<>"))
+                                    "<="     "="      "=="     "!="     "<>"
+                                    ">="))
 
 (define-lex-abbrev delimiters (union ","       ":"       "."       ";"       "@"
                                      "="       "->"      "+="      "-="      "*=" 
@@ -602,5 +603,6 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/realistic.argparse.py")))
+;(output (initial-lexer (open-input-file "test.py")))
+;(output (initial-lexer (open-input-string "'\\n\'")))
 
