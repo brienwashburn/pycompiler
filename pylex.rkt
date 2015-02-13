@@ -106,16 +106,12 @@
 
 ;;;;;;;;;; indent lexing ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define indent-stack '())
-
 (define current-spaces 0)
-
 (define (reset-spaces!) 
   (set! current-spaces 0))
 
-
 (define (inc-spaces!) 
   (set! current-spaces (+ current-spaces 1)))
-
 (define (inc-tab!) 
   (set! current-spaces (+ (- 8 (modulo current-spaces 8)) current-spaces)))
 
@@ -161,7 +157,8 @@
     (begin
       (measure-spaces! lexeme)
       (cond
-        [(equal? (current-indent) current-spaces) (basic-lexer input-port)]
+        [(equal? (current-indent) current-spaces) (reset-spaces!)
+                                                  (basic-lexer input-port)]
         [(< (current-indent) current-spaces) (push-indent!)
                                              (reset-spaces!)
                                              (cons (list 'INDENT) 
@@ -176,7 +173,7 @@
                                       (pop-indents! number-pops)
                                       (reset-spaces!)
                                       `(,@(generate-dedents number-pops) ,@(basic-lexer input-port))]
-           [else (error "mismatched indents")])]))]
+           [else (list)])]))]
    
    [(eof) (begin
             (set! current-spaces 0)
@@ -605,5 +602,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/string.raw-newline.py")))
+;(output (initial-lexer (open-input-file "tests/realistic.argparse.py")))
 
