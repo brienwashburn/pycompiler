@@ -21,7 +21,7 @@
     [{_    _}     (error "mismatched parens")]))
 
 ;;;(define (whitespace-ignored?) (error "implement me!"))
-(define-lex-abbrev hash-comment (:: #\# (:* (char-complement #\newline)) #\newline))
+(define-lex-abbrev hash-comment (:+ (:: #\# (:* (char-complement #\newline)) #\newline)))
 (define-lex-abbrev open-paren (union #\( #\[ #\{))
 (define-lex-abbrev close-paren (union #\) #\] #\}))
 (define-lex-abbrev keyword (union "False"   "class"      "finally"     "is"  
@@ -182,8 +182,8 @@
 
 
 ;;;;;;;;;;;;;;;; id lexer ;;;;;;;;;;;;;;;;;;;;
-(define id-start-chars (list 'lu 'll ' lt 'lm 'nl))
-(define id-continue-chars (list 'mn 'mc 'nd 'pc 'po 'no))
+(define id-start-chars (list 'lu 'll ' lt 'lm 'lo 'nl))
+(define id-continue-chars (list 'mn 'mc 'nd 'pc))
 (define other-id-start-chars (list #\u2118 #\u212E #\u309 #\u309B #\u309C))
 (define other-id-continue-chars (list #\u00B7 #\u0387 #\u1369 #\u1370 #\u1371 #\u19DA))
 
@@ -226,7 +226,10 @@
         [else (begin 
                 (unget port 1)
                 (cons (list 'ID rev-chars)
-                      (basic-lexer port)))])]))
+                      (basic-lexer port)))])]
+     
+     [(eof)  
+    (cons (list 'ENDMARKER) (list))]))
   (id-lexer-wrap port))
 
 
@@ -257,11 +260,14 @@
 
 (define-lex-abbrev bytesliteral (:: bytesprefix (union shortbytes longbytes)))
 (define-lex-abbrev bytesprefix (union #\b #\B (:: #\b #\r) (:: #\B #\r) (:: #\b #\R) (:: #\B #\R) (:: #\r #\b) (:: #\r #\B) (:: #\R #\b) (:: #\R #\B)))
-(define-lex-abbrev shortbytes (union (:: #\' (:* shortbytesitem) #\') (:: #\" (:* shortbytesitem) #\")))
-(define-lex-abbrev longbytes (union (:: #\' #\' #\' (:* longbytesitem) #\' #\' #\') (:: #\" #\" #\" (:* longbytesitem) #\" #\" #\")))
-(define-lex-abbrev shortbytesitem (union shortbyteschar bytesescapeseq))
+(define-lex-abbrev shortbytes (union (:: #\' (:* shortbytesitemsinglequote) #\') (:: #\" (:* shortbytesitemdoublequote) #\")))
+(define-lex-abbrev longbytes (union (:: #\' #\' #\' (complement (:: (:* longbytesitem) (:: #\' #\' #\') (:* longbytesitem))) #\' #\' #\') 
+                                    (:: #\" #\" #\" (complement (:: (:* longbytesitem) (:: #\' #\' #\') (:* longbytesitem))) #\" #\" #\")))
+(define-lex-abbrev shortbytesitemsinglequote (union shortbytescharsinglequote bytesescapeseq))
+(define-lex-abbrev shortbytesitemdoublequote (union shortbyteschardoublequote bytesescapeseq))
 (define-lex-abbrev longbytesitem (union longbyteschar bytesescapeseq))
-(define-lex-abbrev shortbyteschar (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\")))
+(define-lex-abbrev shortbytescharsinglequote (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\')))
+(define-lex-abbrev shortbyteschardoublequote (intersection (char-range #\u0 #\u127) (char-complement #\\) (char-complement #\newline) (char-complement #\")))
 (define-lex-abbrev longbyteschar (intersection (char-range #\u0 #\u127) (char-complement #\\)))
 (define-lex-abbrev bytesescapeseq (:: #\\ (char-range #\u0 #\u127)))
 
@@ -322,9 +328,65 @@
 
 
 
+(define initial-bytestring-lexer
+    (lexer
+     [quote-markers (begin
+                      (set! closing-seq lexeme)
+                      (define-lex-abbrev closing-seq-lex closing-seq)
+                      (cond
+                        [(equal? string-mode "r") (raw-bytestring-lexer input-port "")]
+                        [else (normal-bytestring-lexer input-port "")]))]
+     [bytesprefix (cond
+                     [(equal? (string-downcase lexeme) "r") (begin 
+                                                              (set! string-mode "r")
+                                                              (initial-bytestring-lexer input-port))]
+                     [else (initial-bytestring-lexer input-port)])])) 
+
+
+(define (raw-bytestring-lexer port rev-chars)
+  (define raw-bytestring-lexer-inner
+    (lexer
+     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-range #\u0 #\u127)))
+      (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]
+     [quote-markers 
+      (cond 
+        [(equal? closing-seq lexeme) 
+         (cons (list 'LIT rev-chars)
+               (basic-lexer input-port))]
+        [else (raw-bytestring-lexer input-port (string-append rev-chars lexeme))])]
+      [(:: #\\ any-char)
+       (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]))
+
+  (raw-bytestring-lexer-inner port))
+
+
+(define (normal-bytestring-lexer port rev-chars)
+  (define normal-bytelexer-inside
+    (lexer
+     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-range #\u0 #\u127)))
+      (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+     [quote-markers 
+      (cond 
+        [(equal? closing-seq lexeme) 
+         (cons (list 'LIT rev-chars)
+               (basic-lexer input-port))]
+        [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
+      [(:: #\\ any-char)
+       (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+     [unicode-name 
+        (begin
+          (normal-bytestring-lexer input-port 
+                               (string-append rev-chars (dict-ref name-to-unicode (string-downcase (substring lexeme 3 (- (string-length lexeme) 1)))))))]))
+  (normal-bytelexer-inside port))
 
 
 
+
+
+(define initial-lexer 
+  (lexer 
+   [(:* (:: (:* (union #\space #\tab hash-comment)) (union #\newline)))
+    (basic-lexer input-port)]))
 
 
 
@@ -337,7 +399,7 @@
    [(:* (union #\space #\tab))
     (basic-lexer input-port)]
    
-   [(:+ (:: (:* (union #\space #\tab)) (union #\newline #\u000D)))
+   [(:+ (:: (:* (union #\space #\tab hash-comment)) (union #\newline)))
     (cond
       [(empty? paren-stack) (cons (list 'NEWLINE)
                                   (indent-lexer input-port))]
@@ -394,7 +456,11 @@
    
    [stringliteral (begin
                     (unget input-port (string-length lexeme))
-                    (initial-string-lexer input-port))]
+                    (initial-string-lexer input-port)) ]
+   
+   [bytesliteral (begin
+                    (unget input-port (string-length lexeme))
+                    (initial-bytestring-lexer input-port))]
    
    [(union #\$ #\? #\`)
     (error lexeme)]
@@ -408,7 +474,8 @@
 
 
 
-(define test-input-port (open-input-string (string-append "# Comment 1
+(define test-input-port (open-input-string (string-append 
+"# Comment 1
  # Comment 2
 
 # Factorial:
@@ -417,30 +484,6 @@ def fact(  x\
 ):
 
   if x == -1:
-    return 1.j
-    fars = \"hello \\N{LATIN CAPITAL LETTER J}\"
-
-  elif x ==0:
-
-    return 1
-  else:
-
-        return x* fact(x
-
-- 1)
-
-s = \"" (string #\\ #\\ #\space #\\ #\n #\\ #\' #\\ #\" #\"))))
-
-#;(string-append "# Comment 1
- # Comment 2
-
-# Factorial:
-
-def fact(  x\
-):
-
-  if x == -1:
-    fars = \"hello \\N{LATIN CAPITAL LETTER J}\"
     return 1.j
 
   elif x ==0:
@@ -452,5 +495,11 @@ def fact(  x\
 
 - 1)
 
-s = " (string #\\ #\\ #\space #\\ #\n #\\ #\' #\\ #\" #\"))
-(basic-lexer test-input-port)
+s = \"foo\
+\\ \n\'\"
+
+
+fact(20)")))
+
+
+(initial-lexer test-input-port)
