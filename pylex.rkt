@@ -418,8 +418,10 @@
                                   (indent-lexer input-port))]
         [else (basic-lexer input-port)]))]
    [(:+ (:: (:* (union #\space #\tab #\u000C hash-comment))#\newline))
-    (cons (list 'NEWLINE)
-          (indent-lexer input-port))]
+    (cond
+      [(empty? paren-stack) (cons (list 'NEWLINE)
+                                  (indent-lexer input-port))]
+      [else (basic-lexer input-port)])]
    [any-char
     (begin
       (unget input-port 1)
