@@ -11,7 +11,7 @@
 
 (define test-input-port (open-input-string "hello man \\werere"))
 
-(define name-to-unicode #hash())
+(define name-to-unicode (make-hash))
 
 (test-lexer test-input-port)
 
@@ -19,10 +19,10 @@
 
 (define (build-hash input)
   (cond 
-    [(< (length input) 1) (dict-keys name-to-unicode)]
+    [(< (length input) 1) ]
     [else (begin 
             (define line (string-split (car input) ":"))
-            (dict-set name-to-unicode #hash(((cadr line) . (car line))))
+            (hash-set! name-to-unicode (cadr line) (car line))
             (build-hash (cdr input)))]))
 
 

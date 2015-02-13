@@ -21,7 +21,7 @@
     [{_    _}     (error "mismatched parens")]))
 
 ;;;(define (whitespace-ignored?) (error "implement me!"))
-(define-lex-abbrev hash-comment (:+ (:: #\# (:* (char-complement #\newline)))))
+(define-lex-abbrev hash-comment (:+ (:: #\# (:* (char-complement #\newline)) #\newline)))
 (define-lex-abbrev open-paren (union #\( #\[ #\{))
 (define-lex-abbrev close-paren (union #\) #\] #\}))
 (define-lex-abbrev keyword (union "False"   "class"      "finally"     "is"  
@@ -403,7 +403,7 @@
    [(:* (union #\space #\tab))
     (basic-lexer input-port)]
    
-   [(:+ (:: (:* (union #\space #\tab hash-comment)) #\newline))
+   [(:+ (:: (:* (union #\space #\tab)) (union #\newline hash-comment))
     (cond
       [(empty? paren-stack) (cons (list 'NEWLINE)
                                   (indent-lexer input-port))]
@@ -486,7 +486,8 @@
 
 (define test-input-port (open-input-string (string-append 
 "class;     #buddfudds
-sdfds ")))
+def pass True \
+False")))
 (define (output dalist)
   (cond
     [(equal? 0 (length dalist)) (void)]
