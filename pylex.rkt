@@ -403,7 +403,7 @@
    [(:* (union #\space #\tab))
     (basic-lexer input-port)]
    
-   [(:+ (:: (:* (union #\space #\tab)) (union #\newline hash-comment))
+   [(:+ (:: (:* (union #\space #\tab)) (union #\newline hash-comment)))
     (cond
       [(empty? paren-stack) (cons (list 'NEWLINE)
                                   (indent-lexer input-port))]
