@@ -417,7 +417,7 @@
           (basic-lexer input-port))]
    
    [(union operators delimiters) 
-    (cons (list 'PUNCT (string->symbol lexeme))
+    (cons (list 'PUNCT lexeme)
           (basic-lexer input-port))]
    
    [open-paren
