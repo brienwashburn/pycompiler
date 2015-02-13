@@ -307,7 +307,7 @@
 (define (raw-string-lexer port rev-chars)
   (define raw-string-lexer-inner
     (lexer
-     [(:* (intersection (complement quote-markers) (char-complement #\\)))
+     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-complement #\newline)))
       (raw-string-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
@@ -325,7 +325,7 @@
 (define (normal-string-lexer port rev-chars)
   (define normal-lexer-inside
     (lexer
-     [(:* (intersection (complement quote-markers) (char-complement #\\)))
+     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-complement #\newline)))
       (normal-string-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
@@ -401,7 +401,7 @@
 (define (raw-bytestring-lexer port rev-chars)
   (define raw-bytestring-lexer-inner
     (lexer
-     [(:* (intersection (complement quote-markers) (char-range #\u0 #\u127)))
+     [(:* (intersection (complement quote-markers) (char-range #\u0 #\u127) (char-complement #\newline)))
       (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
@@ -420,7 +420,7 @@
 (define (normal-bytestring-lexer port rev-chars)
   (define normal-bytelexer-inside
     (lexer
-     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-range #\u0 #\u127)))
+     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-range #\u0 #\u127) (char-complement #\newline)))
       (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
@@ -592,5 +592,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/string.raw-triplequoted-newline-escape.py")))
+;(output (initial-lexer (open-input-file "tests/string.newline-error.py")))
 
