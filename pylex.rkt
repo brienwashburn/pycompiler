@@ -307,14 +307,16 @@
 (define (raw-string-lexer port rev-chars)
   (define raw-string-lexer-inner
     (lexer
-     [(:* (intersection (complement quote-markers)))
+     [(:* (intersection (complement quote-markers) (char-complement #\\)))
       (raw-string-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
         [(equal? closing-seq lexeme) 
          (cons (list 'LIT rev-chars)
                (white-space-lexer input-port))]
-        [else (raw-string-lexer input-port (string-append rev-chars lexeme))])]))
+        [else (raw-string-lexer input-port (string-append rev-chars lexeme))])]
+     [(:: #\\ any-char)
+      (raw-string-lexer input-port (string-append rev-chars lexeme))]))
   (raw-string-lexer-inner port))
 
 
@@ -400,7 +402,7 @@
      [quote-markers 
       (cond 
         [(equal? closing-seq lexeme) 
-         (cons (list 'LIT (string->symbol (string-append "\u12#" "\"" rev-chars "\"")))
+         (cons (list 'LIT (string->symbol (string-append  (apply bytes (map char->integer (string->list rev-chars))))))
                (white-space-lexer input-port))]
         [else (raw-bytestring-lexer input-port (string-append rev-chars lexeme))])]
       [any-char
@@ -417,7 +419,7 @@
      [quote-markers 
       (cond 
         [(equal? closing-seq lexeme) 
-         (cons ((list 'LIT (string->symbol (string-append "\12#" "\"" rev-chars "\""))))
+         (cons ((list 'LIT (string->symbol   (apply bytes (map char->integer (string->list rev-chars))))))
                (white-space-lexer input-port))]
         [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
      [(:: #\\ "newline")    
@@ -582,5 +584,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "test.py")))
+;(output (initial-lexer (open-input-file "tests/string.raw-triplequoted-newline-escape.py")))
 
