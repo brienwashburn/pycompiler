@@ -15,7 +15,7 @@
 
 (test-lexer test-input-port)
 
-(define data (open-input-file "data.txt"))
+(define data (open-input-file "\n"))
 
 (define (build-hash input)
   (cond 

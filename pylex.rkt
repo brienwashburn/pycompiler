@@ -421,7 +421,7 @@
                                           (cons (list 'NEWLINE)
                                                 (basic-lexer input-port)))]
                 [(xid-continue? next) (begin 
-                                        (unget (string-length lexeme))
+                                        (unget input-port (string-length lexeme))
                                         (id-lexer lexeme))]
                 [else (cons (list 'KEYWORD (string->symbol lexeme))
                             (basic-lexer input-port))]))]
@@ -490,13 +490,14 @@
 
 
 (define test-input-port (open-input-string (string-append 
-"")))
+"
+a")))
 (define (output dalist)
   (cond
     [(equal? 0 (length dalist)) (void)]
     [else (begin (write (car dalist)) (newline)
                  (output (cdr dalist)))]))
 
-(output (initial-lexer input))
+(output (initial-lexer (open-input-string (port->string input))))
 
 
