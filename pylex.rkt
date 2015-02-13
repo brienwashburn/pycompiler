@@ -307,17 +307,14 @@
 (define (raw-string-lexer port rev-chars)
   (define raw-string-lexer-inner
     (lexer
-     [(:* (intersection (complement quote-markers) (char-complement #\\)))
+     [(:* (intersection (complement quote-markers)))
       (raw-string-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
         [(equal? closing-seq lexeme) 
          (cons (list 'LIT rev-chars)
                (white-space-lexer input-port))]
-        [else (raw-string-lexer input-port (string-append rev-chars lexeme))])]
-      [(:: #\\ any-char)
-       (raw-string-lexer input-port (string-append rev-chars lexeme))]))
-
+        [else (raw-string-lexer input-port (string-append rev-chars lexeme))])]))
   (raw-string-lexer-inner port))
 
 
@@ -397,7 +394,9 @@
                (white-space-lexer input-port))]
         [else (raw-bytestring-lexer input-port (string-append rev-chars lexeme))])]
       [(:: #\\ any-char)
-       (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]))
+       (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]
+      [any-char
+      (error "ya dun fucked up")]))
 
   (raw-bytestring-lexer-inner port))
 
@@ -412,7 +411,9 @@
         [(equal? closing-seq lexeme) 
          (cons (list 'LIT rev-chars)
                (white-space-lexer input-port))]
-        [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]))
+        [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
+     [any-char
+      (error "ya dun fucked up")]))
   (normal-bytelexer-inside port))
 
 
