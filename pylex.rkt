@@ -234,8 +234,7 @@
       (cond
         [(equal? 0 (string-length rev-chars)) (cons (list 'ENDMARKER) (list))]
         [else (cons (list 'ID (string-normalize-nfkc rev-chars))
-                    (cons (list 'NEWLINE)
-                          (cons (list 'ENDMARKER) (list))))])]))
+                    (cons (list 'ENDMARKER) (list)))])]))
   (id-lexer-wrap port))
 
 
@@ -410,8 +409,9 @@
         [(eof-object? next) (cons (list 'NEWLINE)
                                   (basic-lexer input-port))]
         [else (basic-lexer input-port)]))]
-   [(:+ (:: (:* (union #\space #\tab hash-comment)) #\newline))
-    (indent-lexer input-port)]
+   [(:+ (:: (:* (union #\space #\tab hash-comment))#\newline))
+    (cons (list 'NEWLINE)
+          (indent-lexer input-port))]
    [any-char
     (begin
       (unget input-port 1)
@@ -510,5 +510,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer test-input-port))
+;(output (initial-lexer (open-input-file "tests/id.basic.py")))
 
