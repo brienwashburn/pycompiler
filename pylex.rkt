@@ -170,11 +170,11 @@
          (cond 
            [(list? dedents) (pop-indents! (- (length dedents) 1))
                             (reset-spaces!)
-                            (list (flatten (list (generate-dedents (- (length dedents) 1)) (basic-lexer input-port))))]
+                            (flatten (list (generate-dedents (- (length dedents) 1)) (basic-lexer input-port)))]
            [(equal? 0 current-spaces) (define number-pops (length indent-stack))
                                       (pop-indents! number-pops)
                                       (reset-spaces!)
-                                      (list (flatten (list (generate-dedents number-pops) (basic-lexer input-port))))]
+                                      (flatten (list (generate-dedents number-pops) (basic-lexer input-port)))]
            [else (error "mismatched indents")])]))]
    
    [(eof) (begin
