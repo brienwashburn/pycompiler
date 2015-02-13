@@ -416,12 +416,12 @@
       (cond 
         [(eof-object? next) (cons (list 'NEWLINE)
                                   (indent-lexer input-port))]
-        [else (basic-lexer input-port)]))]
+        [else (white-space-lexer input-port)]))]
    [(:+ (:: (:* (union #\space #\tab #\u000C hash-comment))#\newline))
     (cond
       [(empty? paren-stack) (cons (list 'NEWLINE)
                                   (indent-lexer input-port))]
-      [else (basic-lexer input-port)])]
+      [else (white-space-lexer input-port)])]
    [any-char
     (begin
       (unget input-port 1)
@@ -504,7 +504,7 @@
    [any-char 
     (cond
       [(xid-start? lexeme) (id-lexer input-port lexeme)]
-      [else (error "hello")])]))
+      [else (list)])]))
 
 
 
@@ -520,5 +520,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/id.basic.py")))
+;(output (initial-lexer (open-input-file "tests/whitespace.implicit-join.py")))
 
