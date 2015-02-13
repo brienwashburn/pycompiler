@@ -92,7 +92,12 @@
 (define input "")
 ;;(define (port->list port) (error "implement me!"))
 ;;(define (port->string port) (error "implement me!"))
-(match (current-command-line-arguments) ((vector "-n") (set! output-endmarker? #f) (set! input (current-input-port))) ((vector (or "--test" "--drracket")) (set! input test-input)) ((vector file-name) (set! input (open-input-file file-name))) ((vector) (set! input (current-input-port))))
+(match 
+    (current-command-line-arguments) 
+  ((vector "-n") (set! output-endmarker? #f) (set! input (current-input-port))) 
+  ((vector (or "--test" "--drracket")) (set! input test-input)) 
+  ((vector file-name) (set! input (open-input-file file-name))) 
+  ((vector) (set! input (current-input-port))))
 (set! input (open-input-string (port->string input)))
 ;;;(define tokens (error "implement me!"))
 ;;;(for ((token tokens)) (write token) (newline))
@@ -499,4 +504,4 @@ s = \"foo\
 fact(20)")))
 
 
-(initial-lexer test-input-port)
+(initial-lexer input)
