@@ -21,7 +21,7 @@
     [{_    _}     (error "mismatched parens")]))
 
 ;;;(define (whitespace-ignored?) (error "implement me!"))
-(define-lex-abbrev hash-comment (:+ (:: #\# (:* (char-complement #\newline)) #\newline)))
+(define-lex-abbrev hash-comment (:: #\# (:* (char-complement #\newline))))
 (define-lex-abbrev open-paren (union #\( #\[ #\{))
 (define-lex-abbrev close-paren (union #\) #\] #\}))
 (define-lex-abbrev keyword (union "False"   "class"      "finally"     "is"  
@@ -228,12 +228,14 @@
         [else (begin 
                 (unget port 1)
                 (cons (list 'ID (string-normalize-nfkc rev-chars))
-                      (basic-lexer port)))])]
+                      (white-space-lexer port)))])]
      
      [(eof) 
       (cond
         [(equal? 0 (string-length rev-chars)) (cons (list 'ENDMARKER) (list))]
-        [else (cons (list 'ID (string-normalize-nfkc rev-chars)) (cons (list 'ENDMARKER) (list)))])]))
+        [else (cons (list 'ID (string-normalize-nfkc rev-chars))
+                    (cons (list 'NEWLINE)
+                          (cons (list 'ENDMARKER) (list))))])]))
   (id-lexer-wrap port))
 
 
@@ -303,7 +305,7 @@
       (cond 
         [(equal? closing-seq lexeme) 
          (cons (list 'LIT rev-chars)
-               (basic-lexer input-port))]
+               (white-space-lexer input-port))]
         [else (raw-string-lexer input-port (string-append rev-chars lexeme))])]
       [(:: #\\ any-char)
        (raw-string-lexer input-port (string-append rev-chars lexeme))]))
@@ -320,7 +322,7 @@
       (cond 
         [(equal? closing-seq lexeme) 
          (cons (list 'LIT rev-chars)
-               (basic-lexer input-port))]
+               (white-space-lexer input-port))]
         [else (normal-string-lexer input-port (string-append rev-chars lexeme))])]
       [(:: #\\ any-char)
        (normal-string-lexer input-port (string-append rev-chars lexeme))]
@@ -356,7 +358,7 @@
       (cond 
         [(equal? closing-seq lexeme) 
          (cons (list 'LIT rev-chars)
-               (basic-lexer input-port))]
+               (white-space-lexer input-port))]
         [else (raw-bytestring-lexer input-port (string-append rev-chars lexeme))])]
       [(:: #\\ any-char)
        (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]))
@@ -373,7 +375,7 @@
       (cond 
         [(equal? closing-seq lexeme) 
          (cons (list 'LIT rev-chars)
-               (basic-lexer input-port))]
+               (white-space-lexer input-port))]
         [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
       [(:: #\\ any-char)
        (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
@@ -389,11 +391,32 @@
 
 (define initial-lexer 
   (lexer 
-   [(:* (:: (:* (union #\space #\tab hash-comment)) (union #\newline)))
+   [(:* (:: (:* (union #\space #\tab hash-comment)) #\newline))
     (basic-lexer input-port)]
    [(eof)  
     (cons (list 'ENDMARKER) (list))]))
 
+
+
+(define white-space-lexer
+  (lexer
+   [(eof)  
+    (cons (list 'NEWLINE)
+          (cons (list 'ENDMARKER) (list)))]
+   [(:+ (union #\space #\tab hash-comment))
+    (begin
+      (define next (peek-string 1 0 input-port))
+      (cond 
+        [(eof-object? next) (cons (list 'NEWLINE)
+                                  (basic-lexer input-port))]
+        [else (basic-lexer input-port)]))]
+   [(:+ (:: (:* (union #\space #\tab hash-comment)) #\newline))
+    (indent-lexer input-port)]
+   [any-char
+    (begin
+      (unget input-port 1)
+      (basic-lexer input-port))]))
+    
 
 
 
@@ -402,39 +425,25 @@
    [(eof)  
     (cons (list 'ENDMARKER) (list))]
    
-   [(:* (union #\space #\tab))
-    (basic-lexer input-port)]
-   
-   [(:+ (:: (:* (union #\space #\tab)) (union #\newline hash-comment)))
-    (cond
-      [(empty? paren-stack) (cons (list 'NEWLINE)
-                                  (indent-lexer input-port))]
-      [else (basic-lexer input-port)])]
-   
    [(:: #\\ #\newline)
     (basic-lexer input-port)]
    
    [keyword (begin
               (define next (peek-string 1 0 input-port))
               (cond 
-                [(eof-object? next) (cons (list 'KEYWORD lexeme)
-                                          (cons (list 'NEWLINE)
-                                                (basic-lexer input-port)))]
+                [(eof-object? next)  
+                 (cons (list 'KEYWORD(string->symbol lexeme))
+                       (cons (list 'NEWLINE)
+                             (cons (list 'ENDMARKER) (list))))]
                 [(xid-continue? next) (begin 
-                                        (unget input-port lexeme)
+                                        (unget input-port (string-length lexeme))
                                         (id-lexer input-port ""))]
                 [else (cons (list 'KEYWORD (string->symbol lexeme))
-                            (basic-lexer input-port))]))]
+                            (white-space-lexer input-port))]))]
 
    
-   [(union operators delimiters) (begin
-                                   (define next (peek-string 1 0 input-port))
-                                   (cond 
-                                     [(eof-object? next) (cons (list 'PUNCT lexeme)
-                                                               (cons (list 'NEWLINE)
-                                                                     (basic-lexer input-port)))]
-                                     [else (cons (list 'PUNCT lexeme)
-                                                 (basic-lexer input-port))]))]
+   [(union operators delimiters) (cons (list 'PUNCT lexeme)
+                                       (white-space-lexer input-port))]
    
    [open-paren
     (begin 
@@ -445,39 +454,31 @@
    [close-paren
     (begin 
       (pop-paren! lexeme)
-      (define next (peek-string 1 0 input-port))
-      (cond 
-        [(eof-object? next) (cons (list 'PUNCT lexeme)
-                                  (cons (list 'NEWLINE)
-                                        (basic-lexer input-port)))]
-        [else (cons (list 'PUNCT lexeme)
-                    (basic-lexer input-port))]))]
+      (cons (list 'PUNCT lexeme)
+                    (white-space-lexer input-port)))]
         
    [decimalinteger 
     (cons (list 'LIT (string->number lexeme))
-          (basic-lexer input-port))]
+          (white-space-lexer input-port))]
    
    [hexinteger
     (cons (list 'LIT (string->number (substring lexeme 2) 16))
-          (basic-lexer input-port))]
+          (white-space-lexer input-port))]
    
    [octinteger
     (cons (list 'LIT (string->number (substring lexeme 2) 8))
-          (basic-lexer input-port))]
+          (white-space-lexer input-port))]
    [bininteger
     (cons (list 'LIT (string->number (substring lexeme 2) 2))
-          (basic-lexer input-port))]
+          (white-space-lexer input-port))]
    
    [floatnumber
     (cons (list 'LIT (string->number lexeme))
-          (basic-lexer input-port))]
+          (white-space-lexer input-port))]
    
    [imagnumber
     (cons (list 'LIT (string->number (string-append "0+" (substring lexeme 0 (- (string-length lexeme) 1)) "i")))
-          (basic-lexer input-port))]
-   
-   #;[hash-comment 
-    (basic-lexer input-port)]
+          (white-space-lexer input-port))]
    
    [stringliteral (begin
                     (unget input-port (string-length lexeme))
@@ -493,16 +494,15 @@
    [any-char 
     (cond
       [(xid-start? lexeme) (id-lexer input-port lexeme)]
-      [else lexeme])]))
+      [else (error)])]))
 
 
 
 
 
 (define test-input-port (open-input-string (string-append 
-"def f(x):
-  print(        x)
-f(3)")))
+"for:")))
+
 (define (output dalist)
   (cond
     [(equal? 0 (length dalist)) (void)]
