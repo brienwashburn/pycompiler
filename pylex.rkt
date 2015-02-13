@@ -115,7 +115,7 @@
 (define (inc-spaces!) 
   (set! current-spaces (+ current-spaces 1)))
 
-(define (inc-tab! input-port) 
+(define (inc-tab!) 
   (set! current-spaces (+ (- 8 (modulo count 8)) current-spaces)))
 
 (define (current-indent) 
