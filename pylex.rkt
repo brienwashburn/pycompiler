@@ -412,11 +412,17 @@
    [(:: #\\ #\newline)
     (basic-lexer input-port)]
    
-   [(:: keyword (:+ (union #\space #\tab)))
-    (cons (list 'KEYWORD (string->symbol (string-trim lexeme))) 
-          (basic-lexer input-port))]
+   [(:: keyword any-char)
+    (cond 
+      [(xid-continue? (substring lexeme (- (string-length lexeme) 1))) (begin
+                                                                         (unget input-port (string-length lexeme))
+                                                                         (id-lexer input-port))]
+      [else (begin 
+              (unget input-port 1)
+              (cons (list 'KEYWORD (string->symbol (substring lexeme 0 (- (string-length lexeme) 1))))
+                    (basic-lexer input-port)))])]
    
-   [(:: (union operators delimiters) (:+ (union #\space #\tab)))
+   [(union operators delimiters)
     (cons (list 'PUNCT (string-trim lexeme))
           (basic-lexer input-port))]
    
