@@ -422,7 +422,7 @@
                                                 (basic-lexer input-port)))]
                 [(xid-continue? next) (begin 
                                         (unget input-port (string-length lexeme))
-                                        (id-lexer lexeme))]
+                                        (id-lexer lexeme ""))]
                 [else (cons (list 'KEYWORD (string->symbol lexeme))
                             (basic-lexer input-port))]))]
 
