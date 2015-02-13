@@ -504,7 +504,7 @@
    [any-char 
     (cond
       [(xid-start? lexeme) (id-lexer input-port lexeme)]
-      [else (list)])]))
+      [else (error "nuh uh")])]))
 
 
 
@@ -520,5 +520,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/whitespace.implicit-join.py")))
+;(output (initial-lexer (open-input-file "tests/nkfc-not-id-start.py")))
 
