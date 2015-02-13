@@ -417,19 +417,24 @@
    [keyword (begin
               (define next (peek-string 1 0 input-port))
               (cond 
-                [(eof-object? next) (cons (list 'KEYWORD (string->symbol lexeme))
+                [(eof-object? next) (cons (list 'KEYWORD lexeme)
                                           (cons (list 'NEWLINE)
                                                 (basic-lexer input-port)))]
                 [(xid-continue? next) (begin 
-                                        (unget input-port (string-length lexeme))
+                                        (unget input-port lexeme)
                                         (id-lexer input-port ""))]
                 [else (cons (list 'KEYWORD (string->symbol lexeme))
                             (basic-lexer input-port))]))]
 
    
-   [(union operators delimiters)
-    (cons (list 'PUNCT (string-trim lexeme))
-          (basic-lexer input-port))]
+   [(union operators delimiters) (begin
+                                   (define next (peek-string 1 0 input-port))
+                                   (cond 
+                                     [(eof-object? next) (cons (list 'PUNCT lexeme)
+                                                               (cons (list 'NEWLINE)
+                                                                     (basic-lexer input-port)))]
+                                     [else (cons (list 'PUNCT lexeme)
+                                                 (basic-lexer input-port))]))]
    
    [open-paren
     (begin 
@@ -440,8 +445,13 @@
    [close-paren
     (begin 
       (pop-paren! lexeme)
-      (cons (list 'PUNCT lexeme)
-            (basic-lexer input-port)))]
+      (define next (peek-string 1 0 input-port))
+      (cond 
+        [(eof-object? next) (cons (list 'PUNCT lexeme)
+                                  (cons (list 'NEWLINE)
+                                        (basic-lexer input-port)))]
+        [else (cons (list 'PUNCT lexeme)
+                    (basic-lexer input-port))]))]
         
    [decimalinteger 
     (cons (list 'LIT (string->number lexeme))
@@ -490,14 +500,15 @@
 
 
 (define test-input-port (open-input-string (string-append 
-"
-a")))
+"def f(x):
+  print(        x)
+f(3)")))
 (define (output dalist)
   (cond
     [(equal? 0 (length dalist)) (void)]
     [else (begin (write (car dalist)) (newline)
                  (output (cdr dalist)))]))
 
-(output (initial-lexer (open-input-string (port->string input))))
-
+;(output (initial-lexer (open-input-string (port->string input))))
+(output (initial-lexer test-input-port))
 
