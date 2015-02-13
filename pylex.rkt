@@ -117,7 +117,7 @@
   (set! current-spaces (+ current-spaces 1)))
 
 (define (inc-tab!) 
-  (set! current-spaces (+ (- 8 (modulo count 8)) current-spaces)))
+  (set! current-spaces (+ (- 8 (modulo current-spaces 8)) current-spaces)))
 
 (define (current-indent) 
   (if
@@ -146,7 +146,7 @@
 (define (measure-spaces! indent-string) 
   (if 
    (equal? (string-length indent-string) 0) 
-   count
+   (void)
    (match (string-ref indent-string 0)
      [#\space (measure-spaces! (substring indent-string 1)) 
               (inc-spaces!)]
@@ -527,5 +527,5 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/whitespace.implicit-join.py")))
+;(output (initial-lexer (open-input-file "tests/whitespace.dedent.py")))
 
