@@ -336,7 +336,7 @@
                (white-space-lexer input-port))]
         [else (normal-string-lexer input-port (string-append rev-chars lexeme))])]
      [(:: #\\ "newline")    
-      (normal-string-lexer input-port (string-append rev-chars "\newline"))] 
+      (normal-string-lexer input-port (string-append rev-chars "\n"))] 
      [(:: #\\ #\\)    
       (normal-string-lexer input-port (string-append rev-chars "\\"))]
      [(:: #\\ "a")    
@@ -437,7 +437,7 @@
                (white-space-lexer input-port))]
         [else (normal-bytestring-lexer input-port (string-append rev-chars lexeme))])]
      [(:: #\\ "newline")    
-      (normal-bytestring-lexer input-port (string-append rev-chars "\newline"))] 
+      (normal-bytestring-lexer input-port (string-append rev-chars "\n"))] 
      [(:: #\\ #\\)    
       (normal-bytestring-lexer input-port (string-append rev-chars "\\"))]
      [(:: #\\ "a")    
@@ -451,7 +451,7 @@
      [(:: #\\ "f")    
       (normal-bytestring-lexer input-port (string-append rev-chars "\f"))]
      [(:: #\\ "n")    
-      (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
+      (normal-bytestring-lexer input-port (string-append rev-chars "\n"))]
      [(:: #\\ "r")    
       (normal-bytestring-lexer input-port (string-append rev-chars "\r"))]
      [(:: #\\ "t")    
@@ -603,6 +603,6 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "test.py")))
+;(output (initial-lexer (open-input-file "tests/realistic.argparse.py")))
 ;(output (initial-lexer (open-input-string "'\\n\'")))
 
