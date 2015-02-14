@@ -1,4 +1,6 @@
+; Tim Knutson - u0851247
 #lang racket
+
 
 (require parser-tools/lex)
 (require (prefix-in : parser-tools/lex-sre))
@@ -321,6 +323,7 @@
         [else (error "newline in string, error")])]
      [(:: #\\ any-char)
       (raw-string-lexer input-port (string-append rev-chars lexeme))]))
+  (set! string-mode "")
   (raw-string-lexer-inner port))
 
 
@@ -421,7 +424,7 @@
         [else (error "newline in string, error")])]
       [any-char
       (error "ya dun fucked up")]))
-
+  (set! string-mode "")
   (raw-bytestring-lexer-inner port))
 
 
@@ -606,3 +609,4 @@
 ;(output (initial-lexer (open-input-file "tests/realistic.argparse.py")))
 ;(output (initial-lexer (open-input-string "'\\n\'")))
 
+; Tim Knutson - u0851247
