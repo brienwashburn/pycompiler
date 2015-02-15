@@ -360,7 +360,7 @@
       (normal-string-lexer input-port (string-append rev-chars "\t"))]
      [(:: #\\ "v")    
       (normal-string-lexer input-port (string-append rev-chars "\v"))]
-     [(:: #\\ (repetition 3 3 octdigit))    
+     [(:: #\\ (repetition 1 3 octdigit))    
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
      [(:: #\\ #\x (repetition 2 2 hexdigit))    
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
@@ -463,7 +463,7 @@
       (normal-bytestring-lexer input-port (string-append rev-chars "\t"))]
      [(:: #\\ "v")    
       (normal-bytestring-lexer input-port (string-append rev-chars "\v"))]
-     [(:: #\\ (repetition 3 3 octdigit))    
+     [(:: #\\ (repetition 1 3 octdigit))    
       (normal-bytestring-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
      [(:: #\\ #\x (repetition 2 2 hexdigit))    
       (normal-bytestring-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
