@@ -370,6 +370,8 @@
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [(:: #\\ #\newline)
       (normal-string-lexer input-port rev-chars)]
+     [#\\
+       (normal-string-lexer input-port (string-append rev-chars "\\"))]
      [#\newline
       (cond
         [(equal? closing-seq "'''") (normal-string-lexer input-port (string-append rev-chars lexeme))]
@@ -469,6 +471,8 @@
       (normal-bytestring-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [(:: #\\ #\newline) 
       (normal-bytestring-lexer input-port rev-chars)]
+     [#\\
+       (normal-string-lexer input-port (string-append rev-chars "\\"))]
      [#\newline
       (cond
         [(equal? closing-seq "'''") (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
@@ -611,6 +615,6 @@
 
 (output (initial-lexer (open-input-string (port->string input))))
 ;(output (initial-lexer (open-input-file "test2.py")))
-;(output (initial-lexer (open-input-string "'\\n\'")))
+;(output (initial-lexer (open-input-string "s = \"\\9\"")))
 
 ; Tim Knutson - u0851247
