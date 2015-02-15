@@ -609,8 +609,8 @@
     [else (begin (write (car dalist)) (newline)
                  (output (cdr dalist)))]))
 
-;(output (initial-lexer (open-input-string (port->string input))))
-(output (initial-lexer (open-input-file "test2.py")))
+(output (initial-lexer (open-input-string (port->string input))))
+;(output (initial-lexer (open-input-file "test2.py")))
 ;(output (initial-lexer (open-input-string "'\\n\'")))
 
 ; Tim Knutson - u0851247
