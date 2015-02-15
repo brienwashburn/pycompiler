@@ -368,7 +368,7 @@
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [(:: #\\ #\U (repetition 8 8 hexdigit))    
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
-     [(:: #\\ any-char) 
+     [(:: #\\ #\newline)
       (normal-string-lexer input-port rev-chars)]
      [#\newline
       (cond
@@ -467,7 +467,7 @@
       (normal-bytestring-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
      [(:: #\\ #\x (repetition 2 2 hexdigit))    
       (normal-bytestring-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
-     [(:: #\\ any-char) 
+     [(:: #\\ #\newline) 
       (normal-bytestring-lexer input-port rev-chars)]
      [#\newline
       (cond
