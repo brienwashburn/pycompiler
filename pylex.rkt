@@ -472,7 +472,7 @@
      [(:: #\\ #\newline) 
       (normal-bytestring-lexer input-port rev-chars)]
      [#\\
-       (normal-string-lexer input-port (string-append rev-chars "\\"))]
+       (normal-bytestring-lexer input-port (string-append rev-chars "\\"))]
      [#\newline
       (cond
         [(equal? closing-seq "'''") (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
@@ -613,8 +613,8 @@
     [else (begin (write (car dalist)) (newline)
                  (output (cdr dalist)))]))
 
-(output (initial-lexer (open-input-string (port->string input))))
+;(output (initial-lexer (open-input-string (port->string input))))
 ;(output (initial-lexer (open-input-file "test2.py")))
-;(output (initial-lexer (open-input-string "s = \"\\9\"")))
+(output (initial-lexer (open-input-string "s =b\"\\u0040\"")))
 
 ; Tim Knutson - u0851247
