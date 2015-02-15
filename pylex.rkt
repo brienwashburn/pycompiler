@@ -308,7 +308,7 @@
 (define (raw-string-lexer port rev-chars)
   (define raw-string-lexer-inner
     (lexer
-     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-complement #\newline)))
+     [(:+ (intersection (complement quote-markers) (char-complement #\\) (char-complement #\newline)))
       (raw-string-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
@@ -330,7 +330,7 @@
 (define (normal-string-lexer port rev-chars)
   (define normal-lexer-inside
     (lexer
-     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-complement #\newline)))
+     [(:+ (intersection (complement quote-markers) (char-complement #\\) (char-complement #\newline)))
       (normal-string-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
@@ -368,6 +368,8 @@
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
      [(:: #\\ #\U (repetition 8 8 hexdigit))    
       (normal-string-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
+     [(:: #\\ any-char) 
+      (normal-string-lexer input-port rev-chars)]
      [#\newline
       (cond
         [(equal? closing-seq "'''") (normal-string-lexer input-port (string-append rev-chars lexeme))]
@@ -409,7 +411,7 @@
 (define (raw-bytestring-lexer port rev-chars)
   (define raw-bytestring-lexer-inner
     (lexer
-     [(:* (intersection (complement quote-markers) (char-range #\u0 #\u127) (char-complement #\newline)))
+     [(:+ (intersection (complement quote-markers) (char-range #\u0 #\u127) (char-complement #\newline)))
       (raw-bytestring-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
@@ -431,7 +433,7 @@
 (define (normal-bytestring-lexer port rev-chars)
   (define normal-bytestring-lexer-inside
     (lexer
-     [(:* (intersection (complement quote-markers) (char-complement #\\) (char-range #\u0 #\u127) (char-complement #\newline)))
+     [(:+ (intersection (complement quote-markers) (char-complement #\\) (char-range #\u0 #\u127) (char-complement #\newline)))
       (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
      [quote-markers 
       (cond 
@@ -465,6 +467,8 @@
       (normal-bytestring-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 1) 8)))))]
      [(:: #\\ #\x (repetition 2 2 hexdigit))    
       (normal-bytestring-lexer input-port (string-append rev-chars (string (integer->char (string->number (substring lexeme 2) 16)))))]
+     [(:: #\\ any-char) 
+      (normal-string-lexer input-port rev-chars)]
      [#\newline
       (cond
         [(equal? closing-seq "'''") (normal-bytestring-lexer input-port (string-append rev-chars lexeme))]
@@ -480,10 +484,11 @@
 
 (define initial-lexer 
   (lexer 
-   [(:* (:: (:* (union #\space #\u000C #\tab hash-comment)) #\newline))
+   [(:+ (:: (:* (union #\space #\u000C #\tab hash-comment)) #\newline))
     (indent-lexer input-port)]
    [(eof)  
-    (cons (list 'ENDMARKER) (list))]))
+    (cons (list 'ENDMARKER) (list))]
+   [any-char (basic-lexer input-port)]))
 
 
 
@@ -606,7 +611,7 @@
                  (output (cdr dalist)))]))
 
 (output (initial-lexer (open-input-string (port->string input))))
-;(output (initial-lexer (open-input-file "tests/realistic.argparse.py")))
+;(output (initial-lexer (open-input-file "test2.py")))
 ;(output (initial-lexer (open-input-string "'\\n\'")))
 
 ; Tim Knutson - u0851247
