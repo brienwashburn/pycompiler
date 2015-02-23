@@ -156,16 +156,19 @@
  (shift_expr (seq arith_expr (rep (seq (or "<<" ">>") arith_expr))))
  (arith_expr (seq term (rep (seq (or "+" "-") term))))
  (term (seq factor (rep (seq (or "*" "/" "%" "//") factor))))
- (factor (or (seq (or "+" "-" "~") factor) power))
+ (factor (or ($--> (seq ($--> (or ($--> "+" '(UAdd))
+                       ($--> "-" '(USub))
+                       ($--> "~" '(Invert)) `(UnaryOp factor) 
+             power))
  (power (seq atom (rep trailer) (opt (seq "**" factor))))
  (atom
   (or (seq "(" (opt (or yield_expr testlist_comp)) ")")
       (seq "[" (opt testlist_comp) "]")
       (seq "{" (opt dictorsetmaker) "}")
-      'NAME
+      ($--> (seq 'NAME) `(Name ,(string->symbol ($ 1))))
       ($--> 'NUMBER `(Num ,$$))
-      (rep+ 'STRING)
-      "..."
+      ($--> (seq (rep+ 'STRING)) `(Str ,(apply string-append ($ 1))))
+      ($--> "..." '(Ellipsis))
       "None"
       "True"
       "False"))

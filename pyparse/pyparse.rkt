@@ -61,7 +61,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start atom)
+   (start power)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?
@@ -1643,7 +1643,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      `(Name ,(string->symbol ($ 1))))))
  ((NUMBER)
   (let-syntax (($
                 (λ (stx)
@@ -1668,7 +1669,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      `(Str ,(apply string-append ($ 1))))))
  (($...366)
   (let-syntax (($
                 (λ (stx)
@@ -1680,7 +1682,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) '(Ellipsis)))))
  (($None367)
   (let-syntax (($
                 (λ (stx)
