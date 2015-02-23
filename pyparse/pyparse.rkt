@@ -1567,7 +1567,7 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$)))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) `(UnaryOp ,($ 1) ,($ 2)))))
  ((power)
   (let-syntax (($
                 (λ (stx)
@@ -1593,7 +1593,10 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      (if ($ 3)
+        `(BinOp ,(process-trailers ($ 1) ($ 2)) Pow ,($ 3))
+        (process-trailers ($ 1) ($ 2)))))))
 
 (atom
  ((|$(355| $nt356 |$)358|)
@@ -3945,7 +3948,7 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
 
 ($**354
  ((**)
@@ -3999,7 +4002,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'UAdd))))
  (($-349)
   (let-syntax (($
                 (λ (stx)
@@ -4011,7 +4015,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'USub))))
  (($~350)
   (let-syntax (($
                 (λ (stx)
@@ -4023,7 +4028,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Invert)))))
 
 ($~350
  ((~)
