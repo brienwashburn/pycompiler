@@ -61,7 +61,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start power)
+   (start star_expr)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?

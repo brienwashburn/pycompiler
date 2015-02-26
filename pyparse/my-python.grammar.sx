@@ -149,13 +149,31 @@
       (seq "not" "in")
       "is"
       (seq "is" "not")))
- (star_expr (seq "*" expr))
- (expr (seq xor_expr (rep (seq "|" xor_expr))))
- (xor_expr (seq and_expr (rep (seq "^" and_expr))))
- (and_expr (seq shift_expr (rep (seq "&" shift_expr))))
- (shift_expr (seq arith_expr (rep (seq (or "<<" ">>") arith_expr))))
- (arith_expr (seq term (rep (seq (or "+" "-") term))))
- (term (seq factor (rep (seq (or "*" "/" "%" "//") factor))))
+ (star_expr ($--> (seq "*" expr) `(Starred ,($ 2))))
+
+ (expr (or ($--> (seq expr ($--> "|" 'BitOr) xor_expr) `(BinOp ,($ 1) ,($ 2) ,($ 3)))
+                 xor_expr))
+
+ (xor_expr (or ($--> (seq xor_expr ($--> "^" 'BitXor) and_expr) `(BinOp ,($ 1) ,($ 2) ,($ 3)))
+                 and_expr))
+
+ (and_expr (or ($--> (seq and_expr ($--> "&" 'BitAnd) shift_expr) `(BinOp ,($ 1) ,($ 2) ,($ 3)))
+                 shift_expr))
+
+ (shift_expr (or ($--> (seq shift_expr (or ($--> "<<" 'LShift)
+					   ($--> ">>" 'RShift)) arith_expr) `(BinOp ,($ 1) ,($ 2) ,($ 3)))
+                 arith_expr))
+
+ (arith_expr (or ($--> (seq arith_expr (or ($--> "+" 'Add)
+					   ($--> "-" 'Sub)) term) `(BinOp ,($ 1) ,($ 2) ,($ 3)))
+             term))
+
+ (term (or ($--> (seq term (or ($--> "*" 'Mult)
+		          ($--> "/" 'Div)
+		          ($--> "%" 'Mod)
+		          ($--> "//" 'FloorDiv)) factor) `(BinOp ,($ 1) ,($ 2) ,($ 3)))
+          factor))
+
  (factor (or ($--> (seq (or ($--> "+" 'UAdd)
                             ($--> "-" 'USub)
                             ($--> "~" 'Invert)) factor) `(UnaryOp ,($ 1) ,($ 2))) 
@@ -172,9 +190,9 @@
       ($--> 'NUMBER `(Num ,$$))
       ($--> (seq (rep+ 'STRING)) `(Str ,(apply string-append ($ 1))))
       ($--> "..." '(Ellipsis))
-      "None"
-      "True"
-      "False"))
+      ($--> "None" `(NameConstant ,(string->symbol $$)))
+      ($--> "True" `(NameConstant ,(string->symbol $$)))
+      ($--> "False" `(NameConstant ,(string->symbol $$)))))
  (testlist_comp
   (seq
    (or test star_expr)
