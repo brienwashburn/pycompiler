@@ -133,22 +133,30 @@
  (test_nocond (or or_test lambdef_nocond))
  (lambdef (seq "lambda" (opt varargslist) ":" test))
  (lambdef_nocond (seq "lambda" (opt varargslist) ":" test_nocond))
- (or_test (seq and_test (rep (seq "or" and_test))))
- (and_test (seq not_test (rep (seq "and" not_test))))
- (not_test (or (seq "not" not_test) comparison))
- (comparison (seq expr (rep (seq comp_op expr))))
- (comp_op
-  (or "<"
-      ">"
-      "=="
-      ">="
-      "<="
-      "<>"
-      "!="
-      "in"
-      (seq "not" "in")
-      "is"
-      (seq "is" "not")))
+
+ (or_test (or ($--> (seq or_test "or" and_test) `(BoolOp Or ,($ 1) ,($ 3)))
+                 and_test))
+
+ (and_test (or ($--> (seq and_test "and" not_test) `(BoolOp And ,($ 1) ,($ 3)))
+                 not_test))
+
+ (not_test (or ($--> (seq "not" not_test) `(UnaryOp Not ,($ 2)))
+               comparison))
+
+ (comparison (or ($--> (seq comparison comp_op expr) `(Compare ,($ 1) ,($ 2) ,($ 3)))
+                 expr))
+
+ (comp_op ($--> (or ($--> "<" 'Lt)
+		      ($--> ">" 'Gt)
+		      ($--> "==" 'Eq)
+		      ($--> ">=" 'GtE)
+		      ($--> "<=" 'LtE)
+		      ($--> "!=" 'NotEq)
+		      ($--> "in" 'In)
+		      ($--> (seq "not" "in") 'NotIn)
+		      ($--> "is" 'Is)
+		      ($--> (seq "is" "not") 'IsNot)) `(ops ,$$)))
+
  (star_expr ($--> (seq "*" expr) `(Starred ,($ 2))))
 
  (expr (or ($--> (seq expr ($--> "|" 'BitOr) xor_expr) `(BinOp ,($ 1) ,($ 2) ,($ 3)))
