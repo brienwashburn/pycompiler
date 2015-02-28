@@ -48,7 +48,6 @@
  (define (ra-recurs tups args defaults)
   (cond
    [(empty? tups) (list args defaults)]
-   [(< (length (car tups)) 2) (ra-recurs (cdr tups) (append args (list (caar tups))) defaults)]
    [else (ra-recurs (cdr tups) (append args (list (caar tups))) (append defaults (list (cadar tups))))]))
  (ra-recurs tups '() '()))
 
