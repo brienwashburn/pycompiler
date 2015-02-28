@@ -133,7 +133,11 @@
  (with_item (seq test (opt (seq "as" expr))))
  (except_clause (seq "except" (opt (seq test (opt (seq "as" 'NAME))))))
  (suite (or simple_stmt (seq 'NEWLINE 'INDENT (rep+ stmt) 'DEDENT)))
- (test (or (seq or_test (opt (seq "if" or_test "else" test))) lambdef))
+ 
+ (test or_test)
+
+#;(or ($--> (seq or_test (opt (seq "if" or_test "else" test))) 
+            lambdef))
  (test_nocond (or or_test lambdef_nocond))
  (lambdef (seq "lambda" (opt varargslist) ":" test))
  (lambdef_nocond (seq "lambda" (opt varargslist) ":" test_nocond))
