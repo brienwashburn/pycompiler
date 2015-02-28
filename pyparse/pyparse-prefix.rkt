@@ -44,6 +44,14 @@
   [else     (error "can't handle trailers yet")]))
 
 
+(define (recombine-arglist tups)
+ (define (ra-recurs tups args defaults)
+  (cond
+   [(empty? tups) (list args defaults)]
+   [(< (length (car tups)) 2) (ra-recurs (cdr tups) (append args (list (caar tups))) defaults)]
+   [else (ra-recurs (cdr tups) (append args (list (caar tups))) (append defaults (list (cadar tups))))]))
+ (ra-recurs tups '() '()))
+
 ;; You may want to put definitions here rather than defining
 ;; them in the grammar itself.
 
@@ -61,7 +69,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start or_test)
+   (start varargslist)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?

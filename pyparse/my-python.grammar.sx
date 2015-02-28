@@ -9,18 +9,8 @@
  (typedargslist
   (or (seq
        tfpdef
-       (opt (seq "=" test))
-       (rep (seq "," tfpdef (opt (seq "=" test))))
-       (opt
-        (seq
-         ","
-         (opt
-          (or (seq
-               "*"
-               (opt tfpdef)
-               (rep (seq "," tfpdef (opt (seq "=" test))))
-               (opt (seq "," "**" tfpdef)))
-              (seq "**" tfpdef))))))
+       (opt (seq "=" test)) (rep (seq "," tfpdef (opt (seq "=" test))))
+       (opt (seq "," (opt (or (seq "*" (opt tfpdef) (rep (seq "," tfpdef (opt (seq "=" test)))) (opt (seq "," "**" tfpdef))) (seq "**" tfpdef))))))
       (seq
        "*"
        (opt tfpdef)
@@ -29,7 +19,7 @@
       (seq "**" tfpdef)))
  (tfpdef (seq 'NAME (opt (seq ":" test))))
  (varargslist
-  (or (seq
+  ($--> (or (seq
        vfpdef
        (opt (seq "=" test))
        (rep (seq "," vfpdef (opt (seq "=" test))))
@@ -43,13 +33,27 @@
                (rep (seq "," vfpdef (opt (seq "=" test))))
                (opt (seq "," "**" vfpdef)))
               (seq "**" vfpdef))))))
-      (seq
-       "*"
-       (opt vfpdef)
-       (rep (seq "," vfpdef (opt (seq "=" test))))
-       (opt (seq "," "**" vfpdef)))
-      (seq "**" vfpdef)))
- (vfpdef 'NAME)
+
+      ($--> (seq
+       "*" vfpdef
+       ($--> (rep 
+              ($--> (seq "," 
+                         vfpdef 
+                         (opt ($--> (seq "=" test) ($ 2) )))
+                         (if 
+                          ($ 3)
+                          `( ,($ 2) ,($ 3))
+                          `( ,($ 2) #f))))  
+                    (recombine-arglist $$))
+       (opt ($--> (seq "," "**" vfpdef) ($ 3))))  
+	(if ($ 4)
+	`( ()  ()  (,($ 2))   (,@(car ($ 3)))  ()  (,@(cadr ($ 3)))  (,($ 4))  ())
+	`(  ()  ()  (,($ 2))  (,@(car ($ 3)))  ()  (,@(cadr ($ 3))) ()  ())))
+
+      ($--> (seq "**" vfpdef) `( () () () () () () (,($ 2)) ())))
+    `(ARGUMENTS ,`(args ,@($ 0)) ,`(args-types ,@($ 1)) ,`(varargs ,@($ 2)) ,`(kwonlyargs ,@($ 3)) ,`(kwonlyarg-types ,@($ 4)) ,`(kw_defaults ,@($ 5)) ,`(kwarg ,@($ 6)) ,`(defaults ,@($ 7)))))
+
+ (vfpdef ($--> (seq 'NAME) (string->symbol ($ 1))))
  (stmt (or simple_stmt compound_stmt))
  (simple_stmt (seq small_stmt (rep (seq ";" small_stmt)) (opt ";") 'NEWLINE))
  (small_stmt
