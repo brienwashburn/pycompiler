@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo $@ | ../../python-to-sexp/pysx

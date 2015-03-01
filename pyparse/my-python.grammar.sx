@@ -212,9 +212,9 @@
 													 `(Lambda ,($ 2) ,($ 4))
 														`(Lambda ,($ 3)))))
  (lambdef_nocond ($*--> "lambda" (opt varargslist) ":" test_nocond
-													(if ($ 4)
-													 `(Lambda ,($ 2) ,($ 4))
-														`(Lambda ,($ 3)))))
+			(if ($ 4)
+			 `(Lambda ,($ 2) ,($ 4))
+				`(Lambda ,($ 3)))))
 
  (or_test (or ($--> (seq or_test "or" and_test) `(BoolOp Or ,($ 1) ,($ 3)))
                  and_test))
@@ -225,7 +225,7 @@
  (not_test (or ($--> (seq "not" not_test) `(UnaryOp Not ,($ 2)))
                comparison))
 
- (comparison (or ($--> (seq comparison comp_op expr) `(Compare ,($ 1) ,($ 2) ,($ 3)))
+ (comparison (or ($--> (seq comparison comp_op expr) `(Compare (left ,($ 1)) ,($ 2) (comparators ,($ 3))))
                  expr))
 
  (comp_op ($--> (or ($--> "<" 'Lt)
@@ -283,16 +283,38 @@
       ($--> "None" `(NameConstant ,(string->symbol $$)))
       ($--> "True" `(NameConstant ,(string->symbol $$)))
       ($--> "False" `(NameConstant ,(string->symbol $$)))))
- (testlist_comp ($*--> (or test star_expr)
-									     (or comp_for ($*--> (rep ($*--> "," or test star_expr)) (opt ",")))))
+ (testlist_comp trailer)
  (trailer
   (or (seq "(" (opt arglist) ")") (seq "[" subscriptlist "]") (seq "." 'NAME)))
  (subscriptlist (seq subscript (rep (seq "," subscript)) (opt ",")))
- (subscript (or test (seq (opt test) ":" (opt test) (opt sliceop))))
- (sliceop (seq ":" (opt test)))
+
+ (subscript (or test
+                ($*--> test ":" test (opt sliceop) (if ($ 4) `(Slice ,($ 1) ,($ 3) ,($ 4))  `(Slice ,($ 1) ,($ 3) #f)))
+                ($*--> test ":" (opt sliceop)      (if ($ 3) `(Slice ,($ 1) #f ,($ 3))      `(Slice ,($ 1) #f #f)))
+                ($*--> ":" test (opt sliceop)      (if ($ 3) `(Slice #f ,($ 2) ,($ 3))      `(Slice #f ,($ 2) #f )))
+                ($*--> ":" (opt sliceop)           (if ($ 2) `(Slice #f #f ,($ 2))          `(Slice #f #f #f)))))
+                        
+ (sliceop ($*--> ":" 
+                 (opt test)
+                 (if ($ 2)
+                  ($ 2)
+                  #f )))
+
  (exprlist
-  (seq (or expr star_expr) (rep (seq "," (or expr star_expr))) (opt ",")))
- (testlist (seq test (rep (seq "," test)) (opt ",")))
+  ($*--> (or expr star_expr) 
+         ($--> (rep ($*--> "," (or expr star_expr) ($ 2))) $$)
+         (opt ",")  
+          (if (empty? ($ 2))
+         `( ,($ 1) )
+          `(,($ 1) ,($ 2)))))
+
+ (testlist ($*--> test 
+                  ($--> (rep ($*--> "," test ($ 2))) $$)
+                  (opt ",")
+		  (if (empty? ($ 2))
+		   ($ 1)
+		   `(Tuple ,($ 1) ,@($ 2)))))
+
  (dictorsetmaker
   (or (seq
        test
@@ -310,13 +332,19 @@
  (argument (or (seq test (opt comp_for)) (seq test "=" test)))
  (comp_iter (or comp_for comp_if))
  (comp_for ($*--> "for" exprlist "in" or_test (opt comp_iter)
-										(if ($ 5)
-										 `(,($ 2) ,($ 4) ,($ 5))
-										 `(,($ 2) ,($ 4)))))
+					(if ($ 5)
+					 `(for ,@($ 2) in ,($ 4) if ,@($ 5))
+					 `(for ,@($ 2) in ,($ 4) if))))
  (comp_if ($*--> "if" test_nocond (opt comp_iter)
-										(if ($ 3)
-										 `( ,($ 2) ,($ 3))
-										 `( ,($ 2)))))
+					(if ($ 3)
+					 `(,($ 2) ,@($ 3))
+					 `(,($ 2)))))
  (encoding_decl 'NAME)
- (yield_expr (seq "yield" (opt yield_arg)))
- (yield_arg (or (seq "from" test) testlist)))
+ (yield_expr ($*--> "yield" 
+                    (opt yield_arg)
+                    (if ($ 2)
+                    ($ 2)
+                    (`Yield))))
+ (yield_arg (or ($*--> "from" test `(YieldFrom ,($ 2)))
+                ($--> testlist `(Yield ,($ 1)))))
+)
