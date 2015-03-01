@@ -45,11 +45,11 @@
 
 
 (define (recombine-arglist tups)
- (define (ra-recurs tups args defaults)
+ (define (ra-recurs tups args defaults types)
   (cond
-   [(empty? tups) (list args defaults)]
-   [else (ra-recurs (cdr tups) (append args (list (caar tups))) (append defaults (list (cadar tups))))]))
- (ra-recurs tups '() '()))
+   [(empty? tups) (list args defaults types)]
+   [else (ra-recurs (cdr tups) (append args (list (caar tups))) (append defaults (list (cadar tups))) (append types (list (caddar tups))))]))
+ (ra-recurs tups '() '() '()))
 
 ;; You may want to put definitions here rather than defining
 ;; them in the grammar itself.
@@ -68,7 +68,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start varargslist)
+   (start typedargslist)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?
