@@ -38,6 +38,7 @@
 
 ;; Supply auxiliary helpers here, like process-trailers:
 
+
 (define (process-trailers base trailers)
  (match trailers
   ['()      base]
@@ -68,7 +69,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start subscript)
+   (start arglist)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?

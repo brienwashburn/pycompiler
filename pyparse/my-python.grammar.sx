@@ -208,9 +208,9 @@
             lambdef))
  (test_nocond (or or_test lambdef_nocond))
  (lambdef ($*--> "lambda" (opt varargslist) ":" test
-													(if ($ 4)
-													 `(Lambda ,($ 2) ,($ 4))
-														`(Lambda ,($ 3)))))
+												(if ($ 4)
+												 `(Lambda ,($ 2) ,($ 4))
+													`(Lambda ,($ 3)))))
  (lambdef_nocond ($*--> "lambda" (opt varargslist) ":" test_nocond
 			(if ($ 4)
 			 `(Lambda ,($ 2) ,($ 4))
@@ -323,13 +323,30 @@
        (or comp_for (seq (rep (seq "," test ":" test)) (opt ","))))
       (seq test (or comp_for (seq (rep (seq "," test)) (opt ","))))))
  (classdef (seq "class" 'NAME (opt (seq "(" (opt arglist) ")")) ":" suite))
+
  (arglist
-  (seq
-   (rep (seq argument ","))
-   (or (seq argument (opt ","))
-       (seq "*" test (rep (seq "," argument)) (opt (seq "," "**" test)))
-       (seq "**" test))))
- (argument (or (seq test (opt comp_for)) (seq test "=" test)))
+  (>--> (rep (seq argument ","))
+               [(test "=" test)    'balls]
+               [else               'boobs]
+               [_ $$]))
+         #;(or (seq argument (opt ","))
+             (seq "*" test (rep (seq "," argument)) (opt (seq "," "**" test)))
+             ($*--> "**" test `(() () ,($ 2)))
+         `(  ,`(args             ,@($ 0)) 
+             ,`(keywords         ,@($ 1)) 
+             ,`(starargs         ,@($ 2)) 
+             ,`(kwargs           ,@($ 3))))
+
+ (argument (or ($*--> test 
+                      (opt comp_for)
+                      (if ($ 2)
+                       `(GeneratorExp ,($ 1) ,($ 2))
+                       `( ,($ 1))))
+               ($*--> test 
+                      "=" 
+                      test
+                      `( ,($ 1) ,($ 2)))))
+
  (comp_iter (or comp_for comp_if))
  (comp_for ($*--> "for" exprlist "in" or_test (opt comp_iter)
 					(if ($ 5)
@@ -341,8 +358,7 @@
 					 `(,($ 2)))))
  (encoding_decl 'NAME)
  (yield_expr ($*--> "yield" 
-                    (opt yield_arg)
-                    (if ($ 2)
+                    (opt yield_arg) (if ($ 2)
                     ($ 2)
                     (`Yield))))
  (yield_arg (or ($*--> "from" test `(YieldFrom ,($ 2)))
