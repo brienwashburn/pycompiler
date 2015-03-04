@@ -37,12 +37,14 @@
 
 
 ;; Supply auxiliary helpers here, like process-trailers:
-
-
 (define (process-trailers base trailers)
- (match trailers
-  ['()      base]
-  [else     (error "can't handle trailers yet")]))
+  (match trailers 
+    ['()
+     base]
+
+    [(cons (list op exp) rest)
+     (process-trailers `(,(string->symbol op) ,base ,exp) rest)]))
+
 
 
 (define (recombine-arglist tups)
@@ -83,7 +85,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start arglist)
+   (start expr_stmt )
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?

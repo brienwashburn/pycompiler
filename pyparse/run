@@ -1,6 +1,6 @@
 #!/bin/bash 
 if [ $1 = "-f" ]; then
-    pylex --exp < $2 | ./pyparse
+    pylex --exp  $2 | ./pyparse
 else
     echo $@ | pylex --exp | ./pyparse
 fi

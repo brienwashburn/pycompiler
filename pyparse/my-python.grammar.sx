@@ -122,8 +122,10 @@
  (vfpdef ($--> (seq 'NAME) (string->symbol ($ 1))))
 
  (stmt (or simple_stmt compound_stmt))
- (simple_stmt (seq small_stmt (rep (seq ";" small_stmt)) (opt ";") 'NEWLINE))
- (small_stmt
+
+ (simple_stmt ($*--> (rep+/sep ";" small_stmt  #t) 'NEWLINE ($ 1)))
+
+ (small_stmt 
   (or expr_stmt
       del_stmt
       pass_stmt
@@ -132,23 +134,70 @@
       global_stmt
       nonlocal_stmt
       assert_stmt))
- (expr_stmt
-  (seq
-   testlist_star_expr
-   (or (seq augassign (or yield_expr testlist))
-       (rep (seq "=" (or yield_expr testlist_star_expr))))))
- (testlist_star_expr
-  (seq (or test star_expr) (rep (seq "," (or test star_expr))) (opt ",")))
- (augassign
-  (or "+=" "-=" "*=" "/=" "%=" "&=" "|=" "^=" "<<=" ">>=" "**=" "//="))
- (del_stmt (seq "del" exprlist))
- (pass_stmt "pass")
+
+ (expr_stmt (or ($*--> testlist_star_expr 
+                       augassign 
+                       (or yield_expr testlist) 
+                             `(AugAssign ,($ 1) ,($ 2) ,($ 3)))
+                ($*--> testlist_star_expr 
+                       (rep ($*--> "=" (or yield_expr testlist_star_expr) ($ 2)))
+                       (if ($ 2)
+                               $$
+                               '((()))))
+                              `(Assign 
+                                ,(if (equal? (length ($ 1)) 1) 
+                                  `(targets ,($ 1))
+                                  `(targets ,`(Tuple ,@($ 1))))
+                                ,(if (equal? (length (car ($ 2))) 1)
+                                  `(value ,@(caar ($ 2)))
+                                  `(value ,`(Tuple ,@(caar ($ 2)))))))))
+ (testlist_star_expr (rep+/sep "," (or test star_expr) #t) )
+
+ (augassign  (or ($--> "+=" 'Add)
+                 ($--> "-=" 'Sub)
+                 ($--> "*=" 'Mult)
+                 ($--> "/=" 'Div)
+                 ($--> "%=" 'Mod)
+                 ($--> "&=" 'BitAnd)
+                 ($--> "|=" 'BitOr)
+                 ($--> "^=" 'BitXor)
+                 ($--> "<<=" 'LShift)
+                 ($--> ">>=" 'RShift)
+                 ($--> "**=" 'Pow)
+                 ($--> "//=" 'FloorDiv)))
+
+ (del_stmt ($*--> "del" exprlist `(Delete ,($ 2))))
+
+ (pass_stmt ($--> "pass" '(Pass)))
+ 
  (flow_stmt (or break_stmt continue_stmt return_stmt raise_stmt yield_stmt))
- (break_stmt "break")
- (continue_stmt "continue")
- (return_stmt (seq "return" (opt testlist)))
+
+ (break_stmt ($*--> "break" '(Break)))
+
+ (continue_stmt ($*--> "continue" '(Continue)))
+
+ (return_stmt ($*--> "return" 
+                     (opt testlist)
+                     (if ($ 2)
+                       `(Return ,($ 2))
+                        '(Return))))
+
  (yield_stmt yield_expr)
- (raise_stmt (seq "raise" (opt (seq test (opt (seq "from" test))))))
+
+ (raise_stmt ($*--> "raise" 
+                    (opt ($*--> test 
+                                (opt ($*--> "from" 
+                                            test 
+                                            ($ 2))) 
+                                (if ($ 2) 
+                                 `(,($ 1) ,($ 2)) 
+                                 `(,($ 1)))))
+                    (if ($ 2)
+                     `(Raise ,@($ 2))
+                     `(Raise ))))
+                     
+                     
+
  (import_stmt (or import_name import_from))
  (import_name (seq "import" dotted_as_names))
  (import_from
@@ -336,6 +385,7 @@
                                   `(,($ 2) ,($ 3) ())))
                           ($*--> "**" test `(() () ,($ 2))))
                        (coalesce ($ 2) ($ 1)))
+
 			   `(,`(args             ,@($ 0)) 
 			     ,`(keywords         ,@($ 1)) 
 			     ,`(starargs         ,@($ 2)) 
