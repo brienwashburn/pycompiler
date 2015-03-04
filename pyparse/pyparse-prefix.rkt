@@ -52,6 +52,20 @@
    [else (ra-recurs (cdr tups) (append args (list (caar tups))) (append defaults (list (cadar tups))) (append types (list (caddar tups))))]))
  (ra-recurs tups '() '() '()))
 
+
+(define (coalesce lst1 lst2)
+  (define (rec lst out)
+    (cond
+      [(empty? lst) out]
+      [(equal? (length (car lst)) 2) (rec (cdr lst) `(  ,(car out) 
+                                                        (,@(cadr out) (,@(car lst))) 
+                                                        ,(caddr out)  
+                                                        ,(cadddr out)))]
+      [else (rec (cdr lst) `( (,@(car out) ,@(car lst))
+                              ,(cadr out)
+                              ,(caddr out) 
+                              ,(cadddr out)))]))
+  (rec `( ,@lst2 ,@(cadr lst1)) `( () () ,(if (empty? (car lst1)) '(#f) (list (car lst1))) ,(if (empty? (caddr lst1)) '(#f) (list (caddr lst1))))))
 ;; You may want to put definitions here rather than defining
 ;; them in the grammar itself.
 

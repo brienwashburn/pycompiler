@@ -229,15 +229,15 @@
                  expr))
 
  (comp_op ($--> (or ($--> "<" 'Lt)
-		      ($--> ">" 'Gt)
-		      ($--> "==" 'Eq)
-		      ($--> ">=" 'GtE)
-		      ($--> "<=" 'LtE)
-		      ($--> "!=" 'NotEq)
-		      ($--> "in" 'In)
-		      ($--> (seq "not" "in") 'NotIn)
-		      ($--> "is" 'Is)
-		      ($--> (seq "is" "not") 'IsNot)) `(ops ,$$)))
+		    ($--> ">" 'Gt)
+		    ($--> "==" 'Eq)
+		    ($--> ">=" 'GtE)
+		    ($--> "<=" 'LtE)
+		    ($--> "!=" 'NotEq)
+		    ($--> "in" 'In)
+		    ($*--> "not" "in" 'NotIn)
+		    ($--> "is" 'Is)
+		    ($*--> "is" "not" 'IsNot)) `(ops ,$$)))
 
  (star_expr ($--> (seq "*" expr) `(Starred ,($ 2))))
 
@@ -325,17 +325,21 @@
  (classdef (seq "class" 'NAME (opt (seq "(" (opt arglist) ")")) ":" suite))
 
  (arglist
-  (>--> (rep (seq argument ","))
-               [(test "=" test)    'balls]
-               [else               'boobs]
-               [_ $$]))
-         #;(or (seq argument (opt ","))
-             (seq "*" test (rep (seq "," argument)) (opt (seq "," "**" test)))
-             ($*--> "**" test `(() () ,($ 2)))
-         `(  ,`(args             ,@($ 0)) 
-             ,`(keywords         ,@($ 1)) 
-             ,`(starargs         ,@($ 2)) 
-             ,`(kwargs           ,@($ 3))))
+         ($--> ($*--> ($--> (rep ($*--> argument "," ($ 1))) $$) 
+                      (or ($*--> argument (opt ",") `(() (,($ 1)) () ))
+                          ($*--> "*" 
+                                 test 
+                                 ($--> (rep ($*--> "," argument ($ 2))) $$)
+                                 (opt ($*--> "," "**" test ($ 3)))
+                                 (if ($ 4)
+                                  `(,($ 2) ,($ 3) ,($ 4))
+                                  `(,($ 2) ,($ 3) ())))
+                          ($*--> "**" test `(() () ,($ 2))))
+                       (coalesce ($ 2) ($ 1)))
+			   `(,`(args             ,@($ 0)) 
+			     ,`(keywords         ,@($ 1)) 
+			     ,`(starargs         ,@($ 2)) 
+			     ,`(kwargs           ,@($ 3)))))
 
  (argument (or ($*--> test 
                       (opt comp_for)
@@ -345,7 +349,7 @@
                ($*--> test 
                       "=" 
                       test
-                      `( ,($ 1) ,($ 2)))))
+                      `( ,(cadr ($ 1)) ,($ 3)))))
 
  (comp_iter (or comp_for comp_if))
  (comp_for ($*--> "for" exprlist "in" or_test (opt comp_iter)
