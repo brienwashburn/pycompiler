@@ -92,7 +92,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start except_clause)
+   (start typedargslist)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?
@@ -253,7 +253,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1)))
-        `(ARGUMENTS
+        `(Argument
           ,`(args ,@($ 0))
           ,`(args-types ,@($ 1))
           ,`(varargs ,@($ 2))
@@ -291,7 +291,7 @@
           (,@(car ($ 3)))
           (,@(caddr ($ 3)))
           (,@(cadr ($ 3)))
-          ()
+          (#f)
           ()))))))
 
 (tkwonly
@@ -324,7 +324,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
-      `(() () () () () () (,(car ($ 2))) ())))))
+      `(() () (#f) () () () (,(car ($ 2))) ())))))
 
 (tfpdef
  ((NAME $nt98)
@@ -357,7 +357,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1)))
-        `(ARGUMENTS
+        `(Arguments
           ,`(args ,@($ 0))
           ,`(args-types ,@($ 1))
           ,`(varargs ,@($ 2))
@@ -395,7 +395,7 @@
           (,@(car ($ 3)))
           (,@(caddr ($ 3)))
           (,@(cadr ($ 3)))
-          ()
+          (#f)
           ()))))))
 
 (kwonly
@@ -426,7 +426,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
-      `(() () () () () () (,($ 2)) ())))))
+      `(() () (#f) () () () (,($ 2)) ())))))
 
 (vfpdef
  ((NAME)
@@ -8024,7 +8024,7 @@
           ,(list-ref ($ 2) 5)
           ,(list-ref ($ 2) 6)
           (,@(cadr ($ 1))))
-        `((,@(car ($ 1))) (,($ 2)) () () () () () (,@(cadr ($ 1))))))))
+        `((,@(car ($ 1))) (,($ 2)) (#f) () () () (#f) (,@(cadr ($ 1))))))))
  ((arg-kwonly-kwarg)
   (let-syntax (($
                 (λ (stx)

@@ -8,29 +8,41 @@
  (parameters (seq "(" (opt typedargslist) ")"))
 
  (typedargslist
-  ($--> (or 
-	      ($--> (seq
-		      ($--> (seq ($--> (seq tfpdef
-		                       (opt ($--> (seq "=" test) ($ 2))))
-                                       (if ($ 2)
-                                        `( ,(car ($ 1)) ,($ 2) ,(cadr ($ 1)))
-                                        `( ,(car ($ 1)) #f ,(cadr ($ 1)))))
-		                 ($--> (rep tkwonly) $$))
+  ($--> (or ($*--> ($*--> ($*--> tfpdef
+		                 (opt ($--> (seq "=" test) ($ 2)))
                                  (if ($ 2)
-                                  (recombine-arglist `(,($ 1) ,@($ 2)))
-                                  (recombine-arglist `(($ 1)))))
-		      (opt ($--> (seq ","
+                                     `( ,(car ($ 1)) ,($ 2) ,(cadr ($ 1)))
+                                     `( ,(car ($ 1)) #f ,(cadr ($ 1)))))
+		          ($--> (rep tkwonly) $$)
+                          (if ($ 2)
+                              (recombine-arglist `(,($ 1) ,@($ 2)))
+                              (recombine-arglist `(($ 1)))))
+		   (opt ($--> (seq ","
 				      (opt (or targ-kwonly-kwarg
 		     		               tkwarg))) 
                                  (if ($ 2)
                                   ($ 2)
-                                  `(() () () () () () () ())))))
-                      (if ($ 2)
-                      `( (,@(car ($ 1))) (,@(caddr ($ 1))) ,(list-ref ($ 2) 2) ,(list-ref ($ 2) 3) ,(list-ref ($ 2) 4) ,(list-ref ($ 2) 5) ,(list-ref ($ 2) 6) (,@(cadr ($ 1))))
-                      `( (,@(car ($ 1))) (,@(caddr ($ 1))) () () () () () (,@(cadr ($ 1))))))
-	      targ-kwonly-kwarg
-	      tkwarg)
-        `(ARGUMENTS 
+                                  `(() () () () () () () ()))))
+                   (if ($ 2)
+                       `( (,@(car ($ 1))) 
+                          (,@(caddr ($ 1))) 
+                          ,(list-ref ($ 2) 2) 
+                          ,(list-ref ($ 2) 3) 
+                          ,(list-ref ($ 2) 4) 
+                          ,(list-ref ($ 2) 5) 
+                          ,(list-ref ($ 2) 6) 
+                          (,@(cadr ($ 1))))
+                       `( (,@(car ($ 1))) 
+                          (,@(caddr ($ 1))) 
+                          () 
+                          () 
+                          ()
+                          () 
+                          ()  
+                          (,@(cadr ($ 1))))))
+	    targ-kwonly-kwarg
+	    tkwarg)
+        `(Argument 
           ,`(args             ,@($ 0)) 
           ,`(args-types       ,@($ 1)) 
           ,`(varargs          ,@($ 2)) 
@@ -41,23 +53,36 @@
           ,`(defaults         ,@($ 7)))))
 
  (targ-kwonly-kwarg 
-      ($--> (seq
-             "*" 
+      ($*--> "*" 
              tfpdef
              ($--> (rep tkwonly) (recombine-arglist $$))
-             (opt ($--> (seq "," "**" tfpdef) ($ 3))))  
+             (opt ($--> (seq "," "**" tfpdef) ($ 3)))
 	     (if ($ 4)
-	      `( ()  ()  (,(car ($ 2)))   (,@(car ($ 3)))  (,@(caddr ($ 3)))  (,@(cadr ($ 3)))  (,(car ($ 4)))  ())
-	      `( ()  ()  (,(car ($ 2)))   (,@(car ($ 3)))  (,@(caddr ($ 3)))  (,@(cadr ($ 3)))  ()        ()))))
+	      `( ()  
+                 ()
+                 (,(car ($ 2))) 
+                 (,@(car ($ 3)))  
+                 (,@(caddr ($ 3))) 
+                 (,@(cadr ($ 3))) 
+                 (,(car ($ 4)))  
+                 ())
+	      `( ()  
+                 ()
+                 (,(car ($ 2)))   
+                 (,@(car ($ 3)))  
+                 (,@(caddr ($ 3))) 
+                 (,@(cadr ($ 3))) 
+                 (#f) 
+                 ()))))
 
- (tkwonly ($--> (seq "," 
-                    tfpdef 
-                    (opt ($--> (seq "=" test) ($ 2) )))
-                    (if ($ 3)
+ (tkwonly ($*--> "," 
+                 tfpdef 
+                 (opt ($--> (seq "=" test) ($ 2) ))
+                 (if ($ 3)
                      `( ,(car ($ 2)) ,($ 3) ,(cadr ($ 2)))
                      `( ,(car ($ 2)) #f ,(cadr ($ 2))))))
 
- (tkwarg ($--> (seq "**" tfpdef) `( () () () () () () (,(car ($ 2))) ())))
+ (tkwarg ($*--> "**" tfpdef `( () () (#f) () () () (,(car ($ 2))) ())))
 
 
  (tfpdef ($--> (seq 'NAME        
@@ -68,29 +93,41 @@
 
 
  (varargslist
-  ($--> (or 
-	      ($--> (seq
-		      ($--> (seq ($--> (seq vfpdef
-		                       (opt ($--> (seq "=" test) ($ 2))))
-                                       (if ($ 2)
-                                        `( ,($ 1) ,($ 2) #f)
-                                        `( ,($ 1) #f #f)))
-		                 ($--> (rep kwonly) $$))
+  ($--> (or ($*--> ($*--> ($*--> vfpdef
+		                 (opt ($--> (seq "=" test) ($ 2)))
                                  (if ($ 2)
-                                  (recombine-arglist `(,($ 1) ,@($ 2)))
-                                  (recombine-arglist `(($ 1)))))
-		      (opt ($--> (seq ","
-				      (opt (or arg-kwonly-kwarg
-		     		               kwarg))) 
-                                 (if ($ 2)
-                                  ($ 2)
-                                  `(() () () () () () () ())))))
-                      (if ($ 2)
-                      `( (,@(car ($ 1))) () ,(list-ref ($ 2) 2) ,(list-ref ($ 2) 3) ,(list-ref ($ 2) 4) ,(list-ref ($ 2) 5) ,(list-ref ($ 2) 6) (,@(cadr ($ 1))))
-                      `( (,@(car ($ 1))) (,($ 2)) () () () () () (,@(cadr ($ 1))))))
-	      arg-kwonly-kwarg
-	      kwarg)
-        `(ARGUMENTS 
+                                     `( ,($ 1) ,($ 2) #f)
+                                     `( ,($ 1) #f #f)))
+		          ($--> (rep kwonly) $$)
+                          (if ($ 2)
+                              (recombine-arglist `(,($ 1) ,@($ 2)))
+                              (recombine-arglist `(($ 1)))))
+	           (opt ($*--> ","
+			       (opt (or arg-kwonly-kwarg
+		     		        kwarg)) 
+                               (if ($ 2)
+                                   ($ 2)
+                                   `(() () () () () () () ()))))
+                   (if ($ 2)
+                       `( (,@(car ($ 1))) 
+                          () 
+                          ,(list-ref ($ 2) 2) 
+                          ,(list-ref ($ 2) 3) 
+                          ,(list-ref ($ 2) 4) 
+                          ,(list-ref ($ 2) 5) 
+                          ,(list-ref ($ 2) 6) 
+                          (,@(cadr ($ 1))))
+                       `( (,@(car ($ 1))) 
+                          (,($ 2)) 
+                          (#f) 
+                          () 
+                          () 
+                          ()
+                          (#f) 
+                          (,@(cadr ($ 1))))))
+	    arg-kwonly-kwarg
+	    kwarg)
+        `(Arguments 
           ,`(args             ,@($ 0)) 
           ,`(args-types       ,@($ 1)) 
           ,`(varargs          ,@($ 2)) 
@@ -101,23 +138,22 @@
           ,`(defaults         ,@($ 7)))))
 
  (arg-kwonly-kwarg 
-      ($--> (seq
-             "*" 
+      ($*--> "*" 
              vfpdef
              ($--> (rep kwonly) (recombine-arglist $$))
-             (opt ($--> (seq "," "**" vfpdef) ($ 3))))  
+             (opt ($--> (seq "," "**" vfpdef) ($ 3)))
 	     (if ($ 4)
 	      `( ()  ()  (,($ 2))   (,@(car ($ 3)))  (,@(caddr ($ 3)))  (,@(cadr ($ 3)))  (,($ 4))  ())
-	      `( ()  ()  (,($ 2))   (,@(car ($ 3)))  (,@(caddr ($ 3)))  (,@(cadr ($ 3)))  ()        ()))))
+	      `( ()  ()  (,($ 2))   (,@(car ($ 3)))  (,@(caddr ($ 3)))  (,@(cadr ($ 3)))  (#f)        ()))))
 
- (kwonly ($--> (seq "," 
-                    vfpdef 
-                    (opt ($--> (seq "=" test) ($ 2) )))
-                    (if ($ 3)
-                     `( ,($ 2) ,($ 3) #f)
-                     `( ,($ 2) #f #f))))
+ (kwonly ($*--> "," 
+                vfpdef 
+                (opt ($--> (seq "=" test) ($ 2) ))
+                (if ($ 3)
+                    `( ,($ 2) ,($ 3) #f)
+                    `( ,($ 2) #f #f))))
 
- (kwarg ($--> (seq "**" vfpdef) `( () () () () () () (,($ 2)) ())))
+ (kwarg ($*--> "**" vfpdef `( () () (#f) () () () (,($ 2)) ())))
 
  (vfpdef ($--> (seq 'NAME) (string->symbol ($ 1))))
 
@@ -141,7 +177,7 @@
                        (or yield_expr testlist) 
                              `(AugAssign ,($ 1) ,($ 2) ,($ 3)))
                 ($*--> testlist_star_expr 
-                       (rep ($*--> "=" (or yield_expr testlist_star_expr) ($ 2)))
+                       ($--> (rep ($*--> "=" (or yield_expr testlist_star_expr) ($ 2))) $$)
                        (if ($ 2)
                                $$
                                '((()))))

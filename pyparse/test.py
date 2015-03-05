@@ -1,7 +1,1 @@
-
-
-try:
-    print("hello")
-except 4 as ello:
-    print('nope')
-
+*d:5, that:here=5

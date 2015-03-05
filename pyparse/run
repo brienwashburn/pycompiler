@@ -1,6 +1,6 @@
 #!/bin/bash 
 if [ $1 = "-f" ]; then
-    racket ../../python-compiler/pylex.zo --exp  $2 | ./pyparse
+    racket ../../python-compiler/pylex.zo --exp < $2 | ./pyparse
 else
     echo $@ | racket ../../python-compiler/pylex.zo --exp | ./pyparse
 fi
