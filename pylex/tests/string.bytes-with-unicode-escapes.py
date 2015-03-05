@@ -1,3 +1,4 @@
-b"\N{MIDDLE DOT}"
+#b"\N{POUND SIGN}"
 b"\U00000040"
 b"\u0040"
+
