@@ -135,7 +135,8 @@
       nonlocal_stmt
       assert_stmt))
 
- (expr_stmt (or ($*--> testlist_star_expr 
+ (expr_stmt test) 
+   #;(or ($*--> testlist_star_expr 
                        augassign 
                        (or yield_expr testlist) 
                              `(AugAssign ,($ 1) ,($ 2) ,($ 3)))
@@ -150,7 +151,7 @@
                                   `(targets ,`(Tuple ,@($ 1))))
                                 ,(if (equal? (length (car ($ 2))) 1)
                                   `(value ,@(caar ($ 2)))
-                                  `(value ,`(Tuple ,@(caar ($ 2)))))))))
+                                  `(value ,`(Tuple ,@(caar ($ 2)))))))
  (testlist_star_expr (rep+/sep "," (or test star_expr) #t) )
 
  (augassign  (or ($--> "+=" 'Add)
@@ -332,10 +333,23 @@
       ($--> "None" `(NameConstant ,(string->symbol $$)))
       ($--> "True" `(NameConstant ,(string->symbol $$)))
       ($--> "False" `(NameConstant ,(string->symbol $$)))))
- (testlist_comp trailer)
+
+ (testlist_comp
+  (or ($*--> (or test star_expr) comp_for `(ListComp ,($ 1) ,($ 2)))
+      ($*--> (or test star_expr) 
+             (opt ",")
+             (rep/sep "," (or test star_expr) #t) 
+             (if ($ 3)
+                 `(List ,($ 1) ,@($ 3))
+                 `(List ,($ 1)))))) 
  (trailer
-  (or (seq "(" (opt arglist) ")") (seq "[" subscriptlist "]") (seq "." 'NAME)))
- (subscriptlist (seq subscript (rep (seq "," subscript)) (opt ",")))
+  (or ($*--> "(" arglist ")" ($ 2)) 
+      ($*--> "(" ")" `((args ) (keywords ) (starargs #f) (kwargs #f)))
+      ($*--> "[" subscriptlist "]" `(Index ,($ 2)))
+      ($*--> "." 'NAME (string->symbol ($ 2)))))
+
+ (subscriptlist (or ($*--> subscript ($ 1))
+                    ($--> (rep+/sep "," subscript #t) `(Tuple ,@$$))))
 
  (subscript (or test
                 ($*--> test ":" test (opt sliceop) (if ($ 4) `(Slice ,($ 1) ,($ 3) ,($ 4))  `(Slice ,($ 1) ,($ 3) #f)))
@@ -365,12 +379,15 @@
 		   `(Tuple ,($ 1) ,@($ 2)))))
 
  (dictorsetmaker
-  (or (seq
-       test
-       ":"
-       test
-       (or comp_for (seq (rep (seq "," test ":" test)) (opt ","))))
-      (seq test (or comp_for (seq (rep (seq "," test)) (opt ","))))))
+  (or ($*--> test
+             ":"
+             test
+             comp_for
+             `(DictComp ,($ 1) ,($ 3) ,($ 4)))
+      ($--> ($*--> (rep+/sep "," ($*--> test ":" test `(,($ 1) ,($ 3))) #t) (recombine (car $$))) `(Dict (keys ,@(car $$)) (values ,(cadr $$))))
+      ($*--> test comp_for `(SetComp ,($ 1) ,($ 2)))
+      ($--> (rep+/sep "," test #t) `(Set ,@$$))))
+
  (classdef (seq "class" 'NAME (opt (seq "(" (opt arglist) ")")) ":" suite))
 
  (arglist
@@ -416,5 +433,4 @@
                     ($ 2)
                     (`Yield))))
  (yield_arg (or ($*--> "from" test `(YieldFrom ,($ 2)))
-                ($--> testlist `(Yield ,($ 1)))))
-)
+                ($--> testlist `(Yield ,($ 1))))))

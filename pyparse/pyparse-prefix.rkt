@@ -68,6 +68,13 @@
                               ,(caddr out) 
                               ,(cadddr out)))]))
   (rec `( ,@lst2 ,@(cadr lst1)) `( () () ,(if (empty? (car lst1)) '(#f) (list (car lst1))) ,(if (empty? (caddr lst1)) '(#f) (list (caddr lst1))))))
+
+(define (recombine lst)
+  (define (recurs input lst1 lst2)
+    (cond 
+     [(empty? input) (list lst1 lst2)]
+     [else (recurs (cdr input) (append lst1 (list (caar input))) (append lst2 (cadar input)))]))
+  (recurs lst '() '()))
 ;; You may want to put definitions here rather than defining
 ;; them in the grammar itself.
 
@@ -85,7 +92,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start expr_stmt )
+   (start dictorsetmaker)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?
