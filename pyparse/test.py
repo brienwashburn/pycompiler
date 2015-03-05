@@ -1,3 +1,7 @@
-x = 2
-l = [1, 3 , 5]
-q =[x for i in l if 3 > 2]
+
+
+try:
+    print("hello")
+except 4 as ello:
+    print('nope')
+

@@ -247,9 +247,21 @@
         (opt (seq "finally" ":" suite)))
        (seq "finally" ":" suite))))
  (with_stmt (seq "with" with_item (rep (seq "," with_item)) ":" suite))
+
  (with_item (seq test (opt (seq "as" expr))))
- (except_clause (seq "except" (opt (seq test (opt (seq "as" 'NAME))))))
- (suite (or simple_stmt (seq 'NEWLINE 'INDENT (rep+ stmt) 'DEDENT)))
+
+ (except_clause ($*--> "except" 
+                       (opt ($*--> test 
+                                   (opt ($*--> "as" 'NAME (string->symbol ($ 2))))
+                                   (if ($ 2) 
+                                       `(,($ 1) ,($ 2)) 
+                                       `(,($ 1) #f))))
+                       (if ($ 2)
+                        ($ 2)   
+                        `(#f #f))))
+
+ (suite (or simple_stmt  
+            ($*--> 'NEWLINE 'INDENT (rep+ stmt) 'DEDENT ($ 3))))
  
  (test (or ($*--> or_test (opt ($*--> "if" or_test "else" test `(,($ 2) ,($ 4))))
 								(if ($ 2)
@@ -323,9 +335,12 @@
                   `(BinOp ,(process-trailers ($ 1) ($ 2)) Pow, ($ 3))
                   (process-trailers ($ 1) ($ 2)))))
  (atom
-  (or (seq "(" (opt (or yield_expr testlist_comp)) ")")
-      (seq "[" (opt testlist_comp) "]")
-      (seq "{" (opt dictorsetmaker) "}")
+  (or ($*--> "(" (or yield_expr testlist_comp) ")" ($ 2))
+      ($*--> "(" ")" '(Tuple))
+      ($*--> "[" testlist_comp "]" `(Tuple ,($ 2)))
+      ($*--> "[" "]" '(List))
+      ($*--> "{" dictorsetmaker "}" ($ 2))
+      ($*--> "{" "}" `(Dict (keys) (values)))
       ($--> (seq 'NAME) `(Name ,(string->symbol ($ 1))))
       ($--> 'NUMBER `(Num ,$$))
       ($--> (seq (rep+ 'STRING)) `(Str ,(apply string-append ($ 1))))
@@ -340,8 +355,8 @@
              (opt ",")
              (rep/sep "," (or test star_expr) #t) 
              (if ($ 3)
-                 `(List ,($ 1) ,@($ 3))
-                 `(List ,($ 1)))))) 
+                 `(,($ 1) ,@($ 3))
+                 `(,($ 1)))))) 
  (trailer
   (or ($*--> "(" arglist ")" ($ 2)) 
       ($*--> "(" ")" `((args ) (keywords ) (starargs #f) (kwargs #f)))
@@ -419,6 +434,7 @@
                       `( ,(cadr ($ 1)) ,($ 3)))))
 
  (comp_iter (or comp_for comp_if))
+
  (comp_for ($*--> "for" exprlist "in" or_test (opt comp_iter)
 					(if ($ 5)
 					 `(for ,@($ 2) in ,($ 4) if ,@($ 5))
