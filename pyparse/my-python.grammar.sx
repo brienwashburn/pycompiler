@@ -1,11 +1,54 @@
 ((single_input (or 'NEWLINE simple_stmt (seq compound_stmt 'NEWLINE)))
- (file_input (seq (rep (or 'NEWLINE stmt)) 'ENDMARKER))
- (eval_input (seq testlist (rep 'NEWLINE) 'ENDMARKER))
- (decorator (seq "@" dotted_name (opt (seq "(" (opt arglist) ")")) 'NEWLINE))
+ (file_input (or ($*--> (rep (or 'NEWLINE stmt))
+                        'ENDMARKER
+                        `(Module ,@(unpack ($ 1))))
+                 ($*--> 'ENDMARKER
+                        `(Module))))
+ (eval_input ($*--> testlist 
+                    (rep 'NEWLINE) 
+                    'ENDMARKER))
+
+ (decorator ($*--> "@" 
+                   dotted_name     
+                   (opt ($*--> "(" (opt arglist) ")" (if ($ 2) 
+                                                         ($ 2) 
+                                                         `((bases) (keywords) (starargs #f) (kwargs #f)))))
+                   'NEWLINE
+                   (if ($ 3)
+                       `(decorator_list (Call (func ,(process-dotted '() (reverse ($ 2)))) ,@($ 3)))
+                       `(decorator_list ,(process-dotted '() (reverse ($ 2)))))))
+
  (decorators (rep+ decorator))
- (decorated (seq decorators (or classdef funcdef)))
- (funcdef (seq "def" 'NAME parameters (opt (seq "->" test)) ":" suite))
- (parameters (seq "(" (opt typedargslist) ")"))
+
+ (decorated (or ($*--> decorators 
+                       classdef
+                       (replace ($ 2) (- (length ($ 2)) 2) (car ($ 1))))
+                ($*--> decorators 
+                       funcdef
+                       (replace ($ 2) (- (length ($ 2)) 3) (car ($ 1))))))
+
+ (funcdef ($*--> "def" 
+                 'NAME 
+                 parameters 
+                 (opt ($*--> "->" test ($ 2)))
+                 ":" 
+                 suite
+                 (if ($ 4)
+                     `(FunctionDef (name ,(string->symbol ($ 2))) (args ,($ 3)) (body ,@($ 6)) (decorator_list) (return ,($ 4)))
+                     `(FunctionDef (name ,(string->symbol ($ 2))) (args ,($ 3)) (body ,@($ 6)) (decorator_list) (return #f)))))
+
+ (parameters ($*--> "(" (opt typedargslist) ")" (if ($ 2) 
+                                                    ($ 2) 
+                                                    `(Arguments 
+                                                      (args) 
+                                                      (args-types) 
+                                                      (vararg #f) 
+                                                      (kwonlyargs) 
+                                                      (kwonlyarg-types)
+                                                      (kw_defaults)
+                                                      (kwarg #f)
+                                                      (defaults)))))
+                                                    
 
  (typedargslist
   ($--> (or ($*--> ($*--> ($*--> tfpdef
@@ -16,13 +59,13 @@
 		          ($--> (rep tkwonly) $$)
                           (if ($ 2)
                               (recombine-arglist `(,($ 1) ,@($ 2)))
-                              (recombine-arglist `(($ 1)))))
+                              (recombine-arglist `(,($ 1)))))
 		   (opt ($--> (seq ","
 				      (opt (or targ-kwonly-kwarg
 		     		               tkwarg))) 
                                  (if ($ 2)
                                   ($ 2)
-                                  `(() () () () () () () ()))))
+                                  `(() () (#f) () () () (#f) ()))))
                    (if ($ 2)
                        `( (,@(car ($ 1))) 
                           (,@(caddr ($ 1))) 
@@ -34,18 +77,18 @@
                           (,@(cadr ($ 1))))
                        `( (,@(car ($ 1))) 
                           (,@(caddr ($ 1))) 
-                          () 
+                          (#f) 
                           () 
                           ()
                           () 
-                          ()  
+                          (#f)  
                           (,@(cadr ($ 1))))))
 	    targ-kwonly-kwarg
 	    tkwarg)
-        `(Argument 
+        `(Arguments 
           ,`(args             ,@($ 0)) 
-          ,`(args-types       ,@($ 1)) 
-          ,`(varargs          ,@($ 2)) 
+          ,`(arg-types       ,@($ 1)) 
+          ,`(vararg           ,@($ 2)) 
           ,`(kwonlyargs       ,@($ 3)) 
           ,`(kwonlyarg-types  ,@($ 4)) 
           ,`(kw_defaults      ,@($ 5))  
@@ -129,8 +172,8 @@
 	    kwarg)
         `(Arguments 
           ,`(args             ,@($ 0)) 
-          ,`(args-types       ,@($ 1)) 
-          ,`(varargs          ,@($ 2)) 
+          ,`(arg-types       ,@($ 1)) 
+          ,`(vararg          ,@($ 2)) 
           ,`(kwonlyargs       ,@($ 3)) 
           ,`(kwonlyarg-types  ,@($ 4)) 
           ,`(kw_defaults      ,@($ 5))  
@@ -161,34 +204,30 @@
 
  (simple_stmt ($*--> (rep+/sep ";" small_stmt  #t) 'NEWLINE ($ 1)))
 
- (small_stmt 
-  (or expr_stmt
-      del_stmt
-      pass_stmt
-      flow_stmt
-      import_stmt
-      global_stmt
-      nonlocal_stmt
-      assert_stmt))
+ (small_stmt (or expr_stmt
+                 del_stmt
+                 pass_stmt
+                 flow_stmt
+                 import_stmt
+                 global_stmt
+                 nonlocal_stmt
+                 assert_stmt))
 
- (expr_stmt test) 
-   #;(or ($*--> testlist_star_expr 
+
+ (expr_stmt (or ($*--> testlist_star_expr 
                        augassign 
                        (or yield_expr testlist) 
-                             `(AugAssign ,($ 1) ,($ 2) ,($ 3)))
+                             `(AugAssign ,@($ 1) ,($ 2) ,($ 3)))
                 ($*--> testlist_star_expr 
-                       ($--> (rep ($*--> "=" (or yield_expr testlist_star_expr) ($ 2))) $$)
-                       (if ($ 2)
-                               $$
-                               '((()))))
-                              `(Assign 
-                                ,(if (equal? (length ($ 1)) 1) 
-                                  `(targets ,($ 1))
-                                  `(targets ,`(Tuple ,@($ 1))))
-                                ,(if (equal? (length (car ($ 2))) 1)
-                                  `(value ,@(caar ($ 2)))
-                                  `(value ,`(Tuple ,@(caar ($ 2)))))))
- (testlist_star_expr (rep+/sep "," (or test star_expr) #t) )
+                       (rep+ ($*--> "=" 
+                                   (or yield_expr 
+                                       testlist_star_expr) 
+                                   ($ 2)))
+                        `(Assign (targets ,@(car (reorder ($ 1) ($ 2)))) (value  ,(cadr (reorder ($ 1) ($ 2))))))
+                ($*--> testlist_star_expr 
+                       `(Expr ,($ 1)))))
+
+ (testlist_star_expr ($--> (rep+/sep "," (or test star_expr) #t) (if (equal? 1 (length $$)) (car $$) `(Tuple ,@$$))))
 
  (augassign  (or ($--> "+=" 'Add)
                  ($--> "-=" 'Sub)
@@ -236,25 +275,48 @@
                      
 
  (import_stmt (or import_name import_from))
- (import_name (seq "import" dotted_as_names))
- (import_from
-  (seq
-   "from"
-   (or (seq (rep (or "." "...")) dotted_name) (rep+ (or "." "...")))
-   "import"
-   (or "*" (seq "(" import_as_names ")") import_as_names)))
- (import_as_name (seq 'NAME (opt (seq "as" 'NAME))))
- (dotted_as_name (seq dotted_name (opt (seq "as" 'NAME))))
- (import_as_names
-  (seq import_as_name (rep (seq "," import_as_name)) (opt ",")))
- (dotted_as_names (seq dotted_as_name (rep (seq "," dotted_as_name))))
- (dotted_name (seq 'NAME (rep (seq "." 'NAME))))
- (global_stmt (seq "global" 'NAME (rep (seq "," 'NAME))))
+ (import_name ($*--> "import" 
+                     dotted_as_names 
+                     `(Import ,@(car ($ 2)))))
+
+ (import_from ($*--> "from"
+                     (or ($*--> (rep (or "." "..."))
+                                dotted_name 
+                                (if ($ 1)
+		                    `(,(make-dotted ($ 2)) ,(apply + (map string-length (flatten ($ 1)))))
+                                    `(,(make-dotted ($ 2)) 0)))
+                         ($*--> (rep+ (or "." "...")) `(#f ,(apply + (map string-length (flatten ($ 1)))))))
+                     "import"
+                     (or ($*--> "*" `(((* #f))))
+                         ($*-->  "(" import_as_names ")" ($ 2))
+                         ($*--> import_as_names ($ 1)))
+                     `(ImportFrom (module ,(car ($ 2))) (names ,@(car ($ 4))) (level ,(cadr ($ 2))))))
+
+ (import_as_name ($*--> 'NAME 
+                        (opt ($*--> "as" 'NAME (string->symbol ($ 2))))
+                        (if ($ 2)
+                            `(,(string->symbol ($ 1)) ,($ 2))
+                            `(,(string->symbol ($ 1)) #f))))
+
+ (dotted_as_name ($*--> dotted_name 
+                        (opt ($*--> "as" 'NAME (string->symbol ($ 2))))
+                        (if ($ 2)
+                            `(,(make-dotted ($ 1)) ,($ 2))
+                            `(,(make-dotted ($ 1)) #f))))
+
+ (import_as_names ($*--> (rep+/sep "," import_as_name #t) $$))
+
+ (dotted_as_names ($*--> (rep+/sep "," dotted_as_name #f) $$))
+
+ (dotted_name ($--> (rep+/sep "." 'NAME #f) $$))
+
+ (global_stmt ($*--> "global" 
+                     (rep+/sep "," 'NAME #f)
+                     `(Global ,(map string->symbol ($ 2)))))
 
  (nonlocal_stmt ($*--> "nonlocal" 
                        (rep+/sep "," 'NAME #f)
-                       `(Nonlocal ,(apply string->symbol (($ 2))))))
-                       
+                       `(Nonlocal ,(map string->symbol ($ 2)))))
 
  (assert_stmt ($*--> "assert"  
                      (rep+/sep "," test #f)
@@ -464,18 +526,14 @@
       ($--> "False" `(NameConstant ,(string->symbol $$)))))
 
  (testlist_comp
-  (or ($*--> (or test star_expr) comp_for `(ListComp ,($ 1) ,($ 2)))
-      ($*--> (or test star_expr) 
-             (opt ",")
-             (rep/sep "," (or test star_expr) #t) 
-             (if ($ 3)
-                 `(,($ 1) ,@($ 3))
-                 `(,($ 1)))))) 
+  (or ($*--> (or test star_expr) comp_for `(GeneratorExp ,($ 1) ,($ 2)))
+      ($*--> (rep+/sep "," (or test star_expr) #t) 
+             (if (equal? 1 (length ($ 1))) `(GeneratorExp ,@($ 1)) `(Tuple ,@($ 1))))))
  (trailer
   (or ($*--> "(" arglist ")" ($ 2)) 
       ($*--> "(" ")" `((args ) (keywords ) (starargs #f) (kwargs #f)))
       ($*--> "[" subscriptlist "]" `(Index ,($ 2)))
-      ($*--> "." 'NAME (string->symbol ($ 2)))))
+      ($*--> "." 'NAME `(,(string->symbol ($ 2))))))
 
  (subscriptlist (or ($*--> subscript ($ 1))
                     ($--> (rep+/sep "," subscript #t) `(Tuple ,@$$))))
@@ -517,12 +575,19 @@
       ($*--> test comp_for `(SetComp ,($ 1) ,($ 2)))
       ($--> (rep+/sep "," test #t) `(Set ,@$$))))
 
- (classdef (seq "class" 'NAME (opt (seq "(" (opt arglist) ")")) ":" suite))
+ (classdef ($*--> "class" 
+                  'NAME 
+                  (opt ($*--> "(" (opt arglist) ")" (if ($ 2)
+							($ 2) 
+                                                        `((bases) (keywords) (starargs #f) (kwargs #f)))))
+                  ":"
+                  suite (if ($ 3)
+			 `(ClassDef (name ,(string->symbol ($ 2))) ,@($ 3) (body ,@($ 5)) (decorator_list))
+			 `(ClassDef (name ,(string->symbol ($ 2))) (bases) (keywords) (starargs #f) (kwargs #f) (body ,@($ 5)) (decorator_list)))))
 
- (arglist
-         ($--> ($*--> ($--> (rep ($*--> argument "," ($ 1))) $$) 
-                      (or ($*--> argument (opt ",") `(() (,($ 1)) () ))
-                          ($*--> "*" 
+ (arglist ($--> ($*--> ($--> (rep ($*--> argument "," ($ 1))) $$) 
+                       (or ($*--> argument (opt ",") `(() (,($ 1)) () ))
+                           ($*--> "*" 
                                  test 
                                  ($--> (rep ($*--> "," argument ($ 2))) $$)
                                  (opt ($*--> "," "**" test ($ 3)))
@@ -532,7 +597,7 @@
                           ($*--> "**" test `(() () ,($ 2))))
                        (coalesce ($ 2) ($ 1)))
 
-			   `(,`(args             ,@($ 0)) 
+			   `(,`(args             ,($ 0)) 
 			     ,`(keywords         ,@($ 1)) 
 			     ,`(starargs         ,@($ 2)) 
 			     ,`(kwargs           ,@($ 3)))))
@@ -561,6 +626,6 @@
  (yield_expr ($*--> "yield" 
                     (opt yield_arg) (if ($ 2)
                     ($ 2)
-                    (`Yield))))
+                    '(Yield))))
  (yield_arg (or ($*--> "from" test `(YieldFrom ,($ 2)))
                 ($--> testlist `(Yield ,($ 1))))))

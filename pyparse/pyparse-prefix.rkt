@@ -37,14 +37,23 @@
 
 
 ;; Supply auxiliary helpers here, like process-trailers:
+(define (process-trailers base ops)
+  (match ops 
+    ['() base]
+    [(cons (list args kw str kwarg)  rest)
+     (process-trailers `(Call (func  ,base) ,args ,kw ,str ,kwarg) rest)]
+    [(cons (list name) rest )
+      (process-trailers `(Attribute ,base ,name) rest) ]
+    [(cons (list ind name) rest )
+      (process-trailers `(Subscript ,base (,ind ,name)) rest) ]))
 
-(define (process-trailers base trailers)
-  (match trailers 
-    ['()
-     base]
+(define (process-dotted base ops)
+  (match ops 
+    [(list name)
+     `(Name ,(string->symbol name))]
 
-    [(cons (list op exp) rest)
-     (process-trailers `(,(string->symbol op) ,base ,exp) rest)]))
+    [(cons name rest)
+     `(Attribute ,(process-dotted name rest) ,(string->symbol name))]))
 
 (define (process-if base lst)
     (match lst
@@ -54,6 +63,15 @@
     [(cons (list tst bdy) rest)
      (process-if `((If (test ,tst) (body ,@bdy) (orelse ,@base))) rest)]))
 
+(define (replace lst ind rep)
+  (define (recurs new lst)
+    (cond 
+      [(equal? (length lst) 0) new]
+      [(equal? (length new) (+ ind 1)) (recurs (append new (list rep)) (cdr lst))]
+      [else (recurs (append new (list (car lst))) (cdr lst))]))
+  (recurs '() lst))
+
+
 (define (recombine-arglist tups)
  (define (ra-recurs tups args defaults types)
   (cond
@@ -61,6 +79,9 @@
    [else (ra-recurs (cdr tups) (append args (list (caar tups))) (append defaults (list (cadar tups))) (append types (list (caddar tups))))]))
  (ra-recurs tups '() '() '()))
 
+(define (make-dotted lst)
+  (define strung (apply string-append (map string-append lst (make-list (length lst) "."))))
+  (string->symbol (substring strung 0 (- (string-length strung) 1))))
 
 (define (coalesce lst1 lst2)
   (define (rec lst out)
@@ -75,6 +96,19 @@
                               ,(caddr out) 
                               ,(cadddr out)))]))
   (rec `( ,@lst2 ,@(cadr lst1)) `( () () ,(if (empty? (car lst1)) '(#f) (list (car lst1))) ,(if (empty? (caddr lst1)) '(#f) (list (caddr lst1))))))
+
+(define (unpack lst)
+  (define (recurs lst out)
+    (cond
+      [(empty? lst) out]
+      [(equal? 1 (length (car lst))) (recurs (cdr lst) (append out (car lst)))]
+      [else (recurs (cdr lst) (append out (map car (map list (car lst)))))]))
+  (recurs lst '()))
+
+(define (reorder first  second) 
+  (cond
+   [(empty? second) (list first '())]
+   [else `( (,first ,@(take second (- (length second) 1))) ,(last second))]))
 
 (define (recombine lst)
   (define (recurs input lst1 lst2)
@@ -99,7 +133,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start nonlocal_stmt)
+   (start file_input)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?
