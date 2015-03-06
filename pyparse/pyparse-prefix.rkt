@@ -37,6 +37,7 @@
 
 
 ;; Supply auxiliary helpers here, like process-trailers:
+
 (define (process-trailers base trailers)
   (match trailers 
     ['()
@@ -45,7 +46,13 @@
     [(cons (list op exp) rest)
      (process-trailers `(,(string->symbol op) ,base ,exp) rest)]))
 
+(define (process-if base lst)
+    (match lst
+    ['()
+      `(,base)]
 
+    [(cons (list tst bdy) rest)
+     (process-if `((If (test ,tst) (body ,@bdy) (orelse ,@base))) rest)]))
 
 (define (recombine-arglist tups)
  (define (ra-recurs tups args defaults types)
@@ -92,7 +99,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start typedargslist)
+   (start nonlocal_stmt)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?

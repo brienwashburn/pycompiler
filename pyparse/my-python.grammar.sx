@@ -250,41 +250,116 @@
  (dotted_as_names (seq dotted_as_name (rep (seq "," dotted_as_name))))
  (dotted_name (seq 'NAME (rep (seq "." 'NAME))))
  (global_stmt (seq "global" 'NAME (rep (seq "," 'NAME))))
- (nonlocal_stmt (seq "nonlocal" 'NAME (rep (seq "," 'NAME))))
- (assert_stmt (seq "assert" test (opt (seq "," test))))
- (compound_stmt
-  (or if_stmt
-      while_stmt
-      for_stmt
-      try_stmt
-      with_stmt
-      funcdef
-      classdef
-      decorated))
- (if_stmt
-  (seq
-   "if"
-   test
-   ":"
-   suite
-   (rep (seq "elif" test ":" suite))
-   (opt (seq "else" ":" suite))))
- (while_stmt (seq "while" test ":" suite (opt (seq "else" ":" suite))))
- (for_stmt
-  (seq "for" exprlist "in" testlist ":" suite (opt (seq "else" ":" suite))))
- (try_stmt
-  (seq
-   "try"
-   ":"
-   suite
-   (or (seq
-        (rep+ (seq except_clause ":" suite))
-        (opt (seq "else" ":" suite))
-        (opt (seq "finally" ":" suite)))
-       (seq "finally" ":" suite))))
- (with_stmt (seq "with" with_item (rep (seq "," with_item)) ":" suite))
 
- (with_item (seq test (opt (seq "as" expr))))
+ (nonlocal_stmt ($*--> "nonlocal" 
+                       (rep+/sep "," 'NAME #f)
+                       `(Nonlocal ,(apply string->symbol (($ 2))))))
+                       
+
+ (assert_stmt ($*--> "assert"  
+                     (rep+/sep "," test #f)
+                     `(Assert ,@($ 2))))
+
+ (compound_stmt (or if_stmt
+                    while_stmt
+                    for_stmt
+                    try_stmt
+                    with_stmt
+                    funcdef
+                    classdef
+                    decorated))
+
+ (if_stmt ($--> (or ($*--> "if"
+                           test
+                           ":"
+                           suite
+                           (rep ($*--> "elif" test ":" suite `(,($ 2) ,($ 4))))
+                           (if ($ 5)
+                               `(,($ 2) ,@($ 4) ,@(process-if '() ($ 5)))
+                               `(,($ 2) ,@($ 4) )))
+                    ($*--> "if"
+                           test
+                           ":"
+                           suite
+                           (rep+ ($*--> "elif" test ":" suite `(,($ 2) ,($ 4))))
+                           (opt ($*--> "else" ":" suite ($ 3)))
+                           (if ($ 6)
+                               `(,($ 2) ,@($ 4) ,@(process-if ($ 6) ($ 5)))
+                               `(,($ 2) ,@($ 4) ,@(process-if '() ($ 5)))))
+                    ($*--> "if"
+                           test
+                           ":"
+                           suite
+                           (opt ($*--> "else" ":" suite ($ 3)))
+                           (if ($ 5)
+                               `(,($ 2) ,@($ 4) ,($ 5))
+                               `(,($ 2) ,@($ 4) ()))))
+                `(If (test ,(car $$))
+                     (body ,(cadr $$))
+                     (orelse ,@(caddr $$)))))
+
+ (while_stmt ($*--> "while" 
+                    test 
+                    ":" 
+                    suite 
+                    (opt ($*--> "else" ":" suite ($ 3)))
+                    (if ($ 5)
+                        `(While (test ,($ 2))
+                                (body ,@($ 4))
+                                (orelse ,@($ 5)))
+                        `(While (test ,($ 2))
+                                (body ,@($ 4))
+                                (orelse)))))
+
+ (for_stmt ($*--> "for" 
+                  exprlist 
+                  "in" 
+                  testlist
+                  ":" 
+                  suite 
+                  (opt ($*--> "else" ":" suite ($ 3)))
+                  (if ($ 7)
+                      `(For (target ,@($ 2))
+                            (iter ,($ 4))
+                            (body ,@($ 6))
+                            (orelse ,@($ 7)))
+                      `(For (target ,@($ 2))
+                            (iter ,($ 4))
+                            (body ,@($ 6))
+                            (orelse)))))
+
+ (try_stmt ($*--> "try" 
+                  ":"
+                  suite
+                  (or ($*--> (rep+ ($*--> except_clause ":" suite `(except ,@($ 1) ,@($ 3))))
+                             ($*--> "else" ":" suite ($ 3))
+                             (opt ($*--> "finally" ":" suite ($ 3)))
+                             (if ($ 3)
+                                 `(,($ 1) ,($ 2) ,($ 3))
+                                 `(,($ 1) ,($ 2) ())))
+                      ($*--> (rep+ ($*--> except_clause ":" suite `(except ,@($ 1) ,@($ 3))))
+                             (opt ($*--> "else" ":" suite ($ 3)))
+                             (if ($ 2)
+                                 `(,($ 1) ,($ 2) ())
+                                 `(,($ 1) ()     ())))
+                      ($*--> (rep+ ($*--> except_clause ":" suite `(except ,@($ 1) ,@($ 3))))
+                             (opt ($*--> "finally" ":" suite ($ 3)))
+                             (if ($ 2)
+                                 `(,($ 1) () ,($ 2))
+                                 `(,($ 1) () ())))
+                      ($*--> "finally" ":" suite `(() () ,($ 3))))
+                  `(Try (body ,@($ 3))
+                        (handlers ,@(car ($ 4)))
+                        (orelse ,@(cadr ($ 4)))
+                        (finalbody ,@(caddr ($ 4))))))
+
+ (with_stmt ($*--> "with" (rep+/sep "," with_item #f) ":" suite `(With ,@($ 2) ,($ 4))))
+
+ (with_item ($*--> test 
+                   (opt ($*--> "as" expr ($ 2)))
+                   (if ($ 2)
+                       `(,($ 1) ,($ 2))
+                       `(,($ 1) #f))))
 
  (except_clause ($*--> "except" 
                        (opt ($*--> test 
@@ -362,14 +437,17 @@
 		          ($--> "//" 'FloorDiv)) factor) `(BinOp ,($ 1) ,($ 2) ,($ 3)))
           factor))
 
- (factor (or ($--> (seq (or ($--> "+" 'UAdd)
-                            ($--> "-" 'USub)
-                            ($--> "~" 'Invert)) factor) `(UnaryOp ,($ 1) ,($ 2))) 
+ (factor (or ($*--> (or ($--> "+" 'UAdd)
+                        ($--> "-" 'USub)
+                        ($--> "~" 'Invert)) factor `(UnaryOp ,($ 1) ,($ 2))) 
              power ))
- (power ($--> (seq atom (rep trailer) (opt ($--> (seq "**" factor) ($ 2))))
-              (if ($ 3)
-                  `(BinOp ,(process-trailers ($ 1) ($ 2)) Pow, ($ 3))
-                  (process-trailers ($ 1) ($ 2)))))
+
+ (power ($--> (seq atom 
+                   (rep trailer) 
+                   (opt ($--> (seq "**" factor) ($ 2))))
+                   (if ($ 3)
+                       `(BinOp ,(process-trailers ($ 1) ($ 2)) Pow, ($ 3))
+                       (process-trailers ($ 1) ($ 2)))))
  (atom
   (or ($*--> "(" (or yield_expr testlist_comp) ")" ($ 2))
       ($*--> "(" ")" '(Tuple))

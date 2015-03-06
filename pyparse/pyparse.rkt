@@ -37,6 +37,7 @@
 
 
 ;; Supply auxiliary helpers here, like process-trailers:
+
 (define (process-trailers base trailers)
   (match trailers 
     ['()
@@ -45,7 +46,13 @@
     [(cons (list op exp) rest)
      (process-trailers `(,(string->symbol op) ,base ,exp) rest)]))
 
+(define (process-if base lst)
+    (match lst
+    ['()
+      `(,base)]
 
+    [(cons (list tst bdy) rest)
+     (process-if `((If (test ,tst) (body ,@bdy) (orelse ,@base))) rest)]))
 
 (define (recombine-arglist tups)
  (define (ra-recurs tups args defaults types)
@@ -92,7 +99,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
-   (start typedargslist)
+   (start nonlocal_stmt)
    
    (error (λ (tok-ok? tok-name tok-value)
             (if tok-ok?
@@ -141,7 +148,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
 (file_input
- (($nt54 ENDMARKER)
+ (($nt57 ENDMARKER)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -155,7 +162,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
 (eval_input
- ((testlist $nt56 ENDMARKER)
+ ((testlist $nt59 ENDMARKER)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -169,7 +176,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
 
 (decorator
- (($@57 dotted_name $nt58 NEWLINE)
+ (($@60 dotted_name $nt61 NEWLINE)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -183,7 +190,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4))))) $$))))
 
 (decorators
- (($nt63)
+ (($nt66)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -197,7 +204,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (decorated
- ((decorators $nt64)
+ ((decorators $nt67)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -211,7 +218,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
 (funcdef
- (($def65 NAME parameters $nt66 $:69 suite)
+ (($def68 NAME parameters $nt69 $:72 suite)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -226,7 +233,7 @@
       $$))))
 
 (parameters
- ((|$(70| $nt71 |$)72|)
+ ((|$(73| $nt74 |$)75|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -240,7 +247,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
 
 (typedargslist
- (($nt73)
+ (($nt76)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -264,7 +271,7 @@
           ,`(defaults ,@($ 7))))))))
 
 (targ-kwonly-kwarg
- (($*86 tfpdef $nt87 $nt89)
+ (($*89 tfpdef $nt90 $nt92)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -295,7 +302,7 @@
           ()))))))
 
 (tkwonly
- ((|$,93| tfpdef $nt94)
+ ((|$,96| tfpdef $nt97)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -312,7 +319,7 @@
         `(,(car ($ 2)) #f ,(cadr ($ 2))))))))
 
 (tkwarg
- (($**97 tfpdef)
+ (($**100 tfpdef)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -327,7 +334,7 @@
       `(() () (#f) () () () (,(car ($ 2))) ())))))
 
 (tfpdef
- ((NAME $nt98)
+ ((NAME $nt101)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -344,7 +351,7 @@
         `(,(string->symbol ($ 1)) #f))))))
 
 (varargslist
- (($nt101)
+ (($nt104)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -368,7 +375,7 @@
           ,`(defaults ,@($ 7))))))))
 
 (arg-kwonly-kwarg
- (($*114 vfpdef $nt115 $nt117)
+ (($*117 vfpdef $nt118 $nt120)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -399,7 +406,7 @@
           ()))))))
 
 (kwonly
- ((|$,121| vfpdef $nt122)
+ ((|$,124| vfpdef $nt125)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -414,7 +421,7 @@
       (if ($ 3) `(,($ 2) ,($ 3) #f) `(,($ 2) #f #f))))))
 
 (kwarg
- (($**125 vfpdef)
+ (($**128 vfpdef)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -469,7 +476,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (simple_stmt
- (($nt126 NEWLINE)
+ (($nt129 NEWLINE)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -607,7 +614,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
- ((nt46 $rep47 $nt129)
+ ((nt46 $rep47 $nt132)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -622,7 +629,7 @@
       (cons ($ 1) ($ 2))))))
 
 (augassign
- (($+=131)
+ (($+=134)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -635,7 +642,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Add))))
- (($-=132)
+ (($-=135)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -648,7 +655,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Sub))))
- (($*=133)
+ (($*=136)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -661,7 +668,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Mult))))
- (($/=134)
+ (($/=137)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -674,7 +681,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Div))))
- (($%=135)
+ (($%=138)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -687,7 +694,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Mod))))
- (($&=136)
+ (($&=139)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -700,7 +707,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'BitAnd))))
- (($\|=137)
+ (($\|=140)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -713,7 +720,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'BitOr))))
- (($^=138)
+ (($^=141)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -726,7 +733,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'BitXor))))
- (($<<=139)
+ (($<<=142)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -739,7 +746,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'LShift))))
- (($>>=140)
+ (($>>=143)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -752,7 +759,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'RShift))))
- (($**=141)
+ (($**=144)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -765,7 +772,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Pow))))
- (($//=142)
+ (($//=145)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -780,7 +787,7 @@
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'FloorDiv)))))
 
 (del_stmt
- (($del143 exprlist)
+ (($del146 exprlist)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -794,7 +801,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) `(Delete ,($ 2))))))
 
 (pass_stmt
- (($pass144)
+ (($pass147)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -871,7 +878,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (break_stmt
- (($break145)
+ (($break148)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -885,7 +892,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) '(Break)))))
 
 (continue_stmt
- (($continue146)
+ (($continue149)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -899,7 +906,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) '(Continue)))))
 
 (return_stmt
- (($return147 $nt148)
+ (($return150 $nt151)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -928,7 +935,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (raise_stmt
- (($raise149 $nt150)
+ (($raise152 $nt153)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -969,7 +976,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (import_name
- (($import155 dotted_as_names)
+ (($import158 dotted_as_names)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -983,7 +990,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
 (import_from
- (($from156 $nt157 $import166 $nt167)
+ (($from159 $nt160 $import169 $nt170)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -997,7 +1004,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4))))) $$))))
 
 (import_as_name
- ((NAME $nt171)
+ ((NAME $nt174)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1011,7 +1018,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
 (dotted_as_name
- ((dotted_name $nt174)
+ ((dotted_name $nt177)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1025,7 +1032,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
 (import_as_names
- ((import_as_name $nt177 $nt180)
+ ((import_as_name $nt180 $nt183)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1039,7 +1046,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
 
 (dotted_as_names
- ((dotted_as_name $nt182)
+ ((dotted_as_name $nt185)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1053,7 +1060,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
 (dotted_name
- ((NAME $nt185)
+ ((NAME $nt188)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1067,7 +1074,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
 (global_stmt
- (($global188 NAME $nt189)
+ (($global191 NAME $nt192)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1081,7 +1088,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
 
 (nonlocal_stmt
- (($nonlocal192 NAME $nt193)
+ (($nonlocal195 $nt196)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1092,10 +1099,11 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
+      `(Nonlocal ,(apply string->symbol (($ 2))))))))
 
 (assert_stmt
- (($assert196 test $nt197)
+ (($assert197 $nt198)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1106,7 +1114,7 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) `(Assert ,@($ 2))))))
 
 (compound_stmt
  ((if_stmt)
@@ -1207,7 +1215,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (if_stmt
- (($if200 test $:201 suite $nt202 $nt206)
+ (($nt199)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1218,11 +1226,12 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5) ($ 6)))))
-      $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1)))
+        `(If (test ,(car $$)) (body ,(cadr $$)) (orelse ,@(caddr $$))))))))
 
 (while_stmt
- (($while210 test $:211 suite $nt212)
+ (($while222 test $:223 suite $nt224)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1233,10 +1242,13 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5)))))
+      (if ($ 5)
+        `(While (test ,($ 2)) (body ,@($ 4)) (orelse ,@($ 5)))
+        `(While (test ,($ 2)) (body ,@($ 4)) (orelse)))))))
 
 (for_stmt
- (($for216 exprlist $in217 testlist $:218 suite $nt219)
+ (($for228 exprlist $in229 testlist $:230 suite $nt231)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1249,10 +1261,12 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$
                   (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5) ($ 6) ($ 7)))))
-      $$))))
+      (if ($ 7)
+        `(For (target ,@($ 2)) (iter ,($ 4)) (body ,@($ 6)) (orelse ,@($ 7)))
+        `(For (target ,@($ 2)) (iter ,($ 4)) (body ,@($ 6)) (orelse)))))))
 
 (try_stmt
- (($try223 $:224 suite $nt225)
+ (($try235 $:236 suite $nt237)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1263,10 +1277,15 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4)))))
+      `(Try
+        (body ,@($ 3))
+        (handlers ,@(car ($ 4)))
+        (orelse ,@(cadr ($ 4)))
+        (finalbody ,@(caddr ($ 4))))))))
 
 (with_stmt
- (($with239 with_item $nt240 $:243 suite)
+ (($with264 $nt265 $:266 suite)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1277,10 +1296,11 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4)))))
+      `(With ,@($ 2) ,($ 4))))))
 
 (with_item
- ((test $nt244)
+ ((test $nt267)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1291,10 +1311,11 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
+      (if ($ 2) `(,($ 1) ,($ 2)) `(,($ 1) #f))))))
 
 (except_clause
- (($except247 $nt248)
+ (($except270 $nt271)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1321,7 +1342,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- ((NEWLINE INDENT $nt253 DEDENT)
+ ((NEWLINE INDENT $nt276 DEDENT)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1335,7 +1356,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4))))) ($ 3)))))
 
 (test
- ((or_test $nt254)
+ ((or_test $nt277)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1388,7 +1409,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (lambdef
- (($lambda258 $nt259 $:260 test)
+ (($lambda281 $nt282 $:283 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1403,7 +1424,7 @@
       (if ($ 4) `(Lambda ,($ 2) ,($ 4)) `(Lambda ,($ 3)))))))
 
 (lambdef_nocond
- (($lambda261 $nt262 $:263 test_nocond)
+ (($lambda284 $nt285 $:286 test_nocond)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1418,7 +1439,7 @@
       (if ($ 4) `(Lambda ,($ 2) ,($ 4)) `(Lambda ,($ 3)))))))
 
 (or_test
- ((or_test $or264 and_test)
+ ((or_test $or287 and_test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1445,7 +1466,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (and_test
- ((and_test $and265 not_test)
+ ((and_test $and288 not_test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1472,7 +1493,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (not_test
- (($not266 not_test)
+ (($not289 not_test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1525,7 +1546,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (comp_op
- (($nt267)
+ (($nt290)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1540,7 +1561,7 @@
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) `(ops ,$$))))))
 
 (star_expr
- (($*280 expr)
+ (($*303 expr)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1554,7 +1575,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) `(Starred ,($ 2))))))
 
 (expr
- ((expr $nt281 xor_expr)
+ ((expr $nt304 xor_expr)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1581,7 +1602,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (xor_expr
- ((xor_expr $nt283 and_expr)
+ ((xor_expr $nt306 and_expr)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1608,7 +1629,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (and_expr
- ((and_expr $nt285 shift_expr)
+ ((and_expr $nt308 shift_expr)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1635,7 +1656,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (shift_expr
- ((shift_expr $nt287 arith_expr)
+ ((shift_expr $nt310 arith_expr)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1662,7 +1683,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (arith_expr
- ((arith_expr $nt290 term)
+ ((arith_expr $nt313 term)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1689,7 +1710,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (term
- ((term $nt293 factor)
+ ((term $nt316 factor)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1716,7 +1737,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (factor
- (($nt298 factor)
+ (($nt321 factor)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1742,7 +1763,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (power
- ((atom $nt302 $nt303)
+ ((atom $nt325 $nt326)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1759,7 +1780,7 @@
         (process-trailers ($ 1) ($ 2)))))))
 
 (atom
- ((|$(306| $nt307 |$)308|)
+ ((|$(329| $nt330 |$)331|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1771,7 +1792,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 2))))
- ((|$(309| |$)310|)
+ ((|$(332| |$)333|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1783,7 +1804,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) '(Tuple))))
- ((|$[311| testlist_comp |$]312|)
+ ((|$[334| testlist_comp |$]335|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1795,7 +1816,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) `(Tuple ,($ 2)))))
- ((|$[313| |$]314|)
+ ((|$[336| |$]337|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1807,7 +1828,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) '(List))))
- ((|${315| dictorsetmaker |$}316|)
+ ((|${338| dictorsetmaker |$}339|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1819,7 +1840,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 2))))
- ((|${317| |$}318|)
+ ((|${340| |$}341|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1857,7 +1878,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) `(Num ,$$)))))
- (($nt319)
+ (($nt342)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1870,7 +1891,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       `(Str ,(apply string-append ($ 1))))))
- (($...320)
+ (($...343)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1883,7 +1904,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) '(Ellipsis)))))
- (($None321)
+ (($None344)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1897,7 +1918,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1)))
         `(NameConstant ,(string->symbol $$))))))
- (($True322)
+ (($True345)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1911,7 +1932,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1)))
         `(NameConstant ,(string->symbol $$))))))
- (($False323)
+ (($False346)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1927,7 +1948,7 @@
         `(NameConstant ,(string->symbol $$)))))))
 
 (testlist_comp
- (($nt324 comp_for)
+ (($nt347 comp_for)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1940,7 +1961,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
       `(ListComp ,($ 1) ,($ 2)))))
- (($nt325 $nt326 $nt328)
+ (($nt348 $nt349 $nt351)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1955,7 +1976,7 @@
       (if ($ 3) `(,($ 1) ,@($ 3)) `(,($ 1)))))))
 
 (trailer
- ((|$(331| arglist |$)332|)
+ ((|$(354| arglist |$)355|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1967,7 +1988,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 2))))
- ((|$(333| |$)334|)
+ ((|$(356| |$)357|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1980,7 +2001,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
       `((args) (keywords) (starargs #f) (kwargs #f)))))
- ((|$[335| subscriptlist |$]336|)
+ ((|$[358| subscriptlist |$]359|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -1992,7 +2013,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) `(Index ,($ 2)))))
- (($.337 NAME)
+ (($.360 NAME)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2018,7 +2039,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (($nt338)
+ (($nt361)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2045,7 +2066,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- ((test $:341 test $nt342)
+ ((test $:364 test $nt365)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2058,7 +2079,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4)))))
       (if ($ 4) `(Slice ,($ 1) ,($ 3) ,($ 4)) `(Slice ,($ 1) ,($ 3) #f)))))
- ((test $:343 $nt344)
+ ((test $:366 $nt367)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2071,7 +2092,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
       (if ($ 3) `(Slice ,($ 1) #f ,($ 3)) `(Slice ,($ 1) #f #f)))))
- (($:345 test $nt346)
+ (($:368 test $nt369)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2084,7 +2105,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
       (if ($ 3) `(Slice #f ,($ 2) ,($ 3)) `(Slice #f ,($ 2) #f)))))
- (($:347 $nt348)
+ (($:370 $nt371)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2099,7 +2120,7 @@
       (if ($ 2) `(Slice #f #f ,($ 2)) `(Slice #f #f #f))))))
 
 (sliceop
- (($:349 $nt350)
+ (($:372 $nt373)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2113,7 +2134,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (if ($ 2) ($ 2) #f)))))
 
 (exprlist
- (($nt351 $nt352 $nt357)
+ (($nt374 $nt375 $nt380)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2128,7 +2149,7 @@
       (if (empty? ($ 2)) `(,($ 1)) `(,($ 1) ,($ 2)))))))
 
 (testlist
- ((test $nt359 $nt363)
+ ((test $nt382 $nt386)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2143,7 +2164,7 @@
       (if (empty? ($ 2)) ($ 1) `(Tuple ,($ 1) ,@($ 2)))))))
 
 (dictorsetmaker
- ((test $:365 test comp_for)
+ ((test $:388 test comp_for)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2156,7 +2177,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4)))))
       `(DictComp ,($ 1) ,($ 3) ,($ 4)))))
- (($nt366)
+ (($nt389)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2182,7 +2203,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) `(SetComp ,($ 1) ,($ 2)))))
- (($nt370)
+ (($nt393)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2197,7 +2218,7 @@
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) `(Set ,@$$))))))
 
 (classdef
- (($class373 NAME $nt374 $:379 suite)
+ (($class396 NAME $nt397 $:402 suite)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2211,7 +2232,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5))))) $$))))
 
 (arglist
- (($nt380)
+ (($nt403)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2230,7 +2251,7 @@
           ,`(kwargs ,@($ 3))))))))
 
 (argument
- ((test $nt398)
+ ((test $nt421)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2243,7 +2264,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
       (if ($ 2) `(GeneratorExp ,($ 1) ,($ 2)) `(,($ 1))))))
- ((test $=399 test)
+ ((test $=422 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2284,7 +2305,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (comp_for
- (($for400 exprlist $in401 or_test $nt402)
+ (($for423 exprlist $in424 or_test $nt425)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2301,7 +2322,7 @@
         `(for ,@($ 2) in ,($ 4) if))))))
 
 (comp_if
- (($if403 test_nocond $nt404)
+ (($if426 test_nocond $nt427)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2330,7 +2351,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 (yield_expr
- (($yield405 $nt406)
+ (($yield428 $nt429)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2345,7 +2366,7 @@
       (if ($ 2) ($ 2) (`Yield))))))
 
 (yield_arg
- (($from407 test)
+ (($from430 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2371,6 +2392,74 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) `(Yield ,($ 1)))))))
 
+($rep56
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) '())))
+ ((|$,431| test $rep56)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      (cons ($ 2) ($ 3))))))
+
+($rep55
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) '())))
+ ((|$,432| nt54 $rep55)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      (cons ($ 2) ($ 3))))))
+
+(nt54
+ ((test $:433 test)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) `(,($ 1) ,($ 3))))))
+
 ($rep53
  (()
   (let-syntax (($
@@ -2384,7 +2473,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '())))
- ((|$,408| test $rep53)
+ ((|$,434| subscript $rep53)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2411,7 +2500,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '())))
- ((|$,409| nt51 $rep52)
+ ((|$,435| nt51 $rep52)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2426,7 +2515,7 @@
       (cons ($ 2) ($ 3))))))
 
 (nt51
- ((test $:410 test)
+ ((test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2437,7 +2526,19 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) `(,($ 1) ,($ 3))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ ((star_expr)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
 ($rep50
  (()
@@ -2452,7 +2553,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '())))
- ((|$,411| subscript $rep50)
+ ((|$,436| with_item $rep50)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2479,7 +2580,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '())))
- ((|$,412| nt48 $rep49)
+ ((|$,437| test $rep49)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2493,8 +2594,8 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
       (cons ($ 2) ($ 3))))))
 
-(nt48
- ((test)
+($rep48
+ (()
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2505,8 +2606,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- ((star_expr)
+    (let-syntax (($$ (λ (_) #'(list)))) '())))
+ ((|$,438| NAME $rep48)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2517,7 +2618,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      (cons ($ 2) ($ 3))))))
 
 ($rep47
  (()
@@ -2532,7 +2634,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '())))
- ((|$,413| nt46 $rep47)
+ ((|$,439| nt46 $rep47)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2585,7 +2687,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '())))
- ((|$;414| small_stmt $rep45)
+ ((|$;440| small_stmt $rep45)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2599,7 +2701,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
       (cons ($ 2) ($ 3))))))
 
-(|$;414|
+(|$;440|
  ((|;|)
   (let-syntax (($
                 (λ (stx)
@@ -2613,7 +2715,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ";"))))
 
-(|$,413|
+(|$,439|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -2627,7 +2729,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-(|$,412|
+(|$,438|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -2641,7 +2743,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-(|$,411|
+(|$,437|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -2655,7 +2757,49 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($:410
+(|$,436|
+ ((|,|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+
+(|$,435|
+ ((|,|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+
+(|$,434|
+ ((|,|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+
+($:433
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -2669,7 +2813,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-(|$,409|
+(|$,432|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -2683,7 +2827,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-(|$,408|
+(|$,431|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -2697,7 +2841,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($from407
+($from430
  ((from)
   (let-syntax (($
                 (λ (stx)
@@ -2711,7 +2855,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "from"))))
 
-($nt406
+($nt429
  ((yield_arg)
   (let-syntax (($
                 (λ (stx)
@@ -2737,7 +2881,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($yield405
+($yield428
  ((yield)
   (let-syntax (($
                 (λ (stx)
@@ -2751,7 +2895,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "yield"))))
 
-($nt404
+($nt427
  ((comp_iter)
   (let-syntax (($
                 (λ (stx)
@@ -2777,7 +2921,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($if403
+($if426
  ((if)
   (let-syntax (($
                 (λ (stx)
@@ -2791,7 +2935,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "if"))))
 
-($nt402
+($nt425
  ((comp_iter)
   (let-syntax (($
                 (λ (stx)
@@ -2817,7 +2961,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($in401
+($in424
  ((in)
   (let-syntax (($
                 (λ (stx)
@@ -2831,7 +2975,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "in"))))
 
-($for400
+($for423
  ((for)
   (let-syntax (($
                 (λ (stx)
@@ -2845,7 +2989,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "for"))))
 
-($=399
+($=422
  ((=)
   (let-syntax (($
                 (λ (stx)
@@ -2859,7 +3003,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
-($nt398
+($nt421
  ((comp_for)
   (let-syntax (($
                 (λ (stx)
@@ -2885,8 +3029,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt380
- (($nt381 $nt385)
+($nt403
+ (($nt404 $nt408)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2899,8 +3043,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (coalesce ($ 2) ($ 1))))))
 
-($nt385
- ((argument $nt386)
+($nt408
+ ((argument $nt409)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2912,7 +3056,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) `(() (,($ 1)) ()))))
- (($*388 test $nt389 $nt393)
+ (($*411 test $nt412 $nt416)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2925,7 +3069,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4)))))
       (if ($ 4) `(,($ 2) ,($ 3) ,($ 4)) `(,($ 2) ,($ 3) ())))))
- (($**397 test)
+ (($**420 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2938,7 +3082,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) `(() () ,($ 2))))))
 
-($**397
+($**420
  ((**)
   (let-syntax (($
                 (λ (stx)
@@ -2952,8 +3096,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "**"))))
 
-($nt393
- (($nt394)
+($nt416
+ (($nt417)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2978,8 +3122,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt394
- ((|$,395| $**396 test)
+($nt417
+ ((|$,418| $**419 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2992,7 +3136,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
 
-($**396
+($**419
  ((**)
   (let-syntax (($
                 (λ (stx)
@@ -3005,6 +3149,387 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "**"))))
+
+(|$,418|
+ ((|,|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+
+($nt412
+ (($nt413)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) $$)))))
+
+($nt413
+ (($nt414 $nt413)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) '()))))
+
+($nt414
+ ((|$,415| argument)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
+
+(|$,415|
+ ((|,|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+
+($*411
+ ((*)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "*"))))
+
+($nt409
+ ((|$,410|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+(|$,410|
+ ((|,|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+
+($nt404
+ (($nt405)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) $$)))))
+
+($nt405
+ (($nt406 $nt405)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) '()))))
+
+($nt406
+ ((argument |$,407|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 1)))))
+
+(|$,407|
+ ((|,|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+
+($:402
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($nt397
+ (($nt398)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($nt398
+ ((|$(399| $nt400 |$)401|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
+
+(|$)401|
+ ((|)|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ")"))))
+
+($nt400
+ ((arglist)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+(|$(399|
+ ((|(|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "("))))
+
+($class396
+ ((class)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "class"))))
+
+($nt393
+ ((test)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
+ ((test $rep56 $nt394)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      (cons ($ 1) ($ 2))))))
+
+($nt394
+ ((|$,395|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
 (|$,395|
  ((|,|)
@@ -3032,11 +3557,10 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) $$)))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (recombine (car $$))))))
 
 ($nt390
- (($nt391 $nt390)
+ ((nt54)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3047,7 +3571,34 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
+ ((nt54 $rep55 $nt391)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      (cons ($ 1) ($ 2))))))
+
+($nt391
+ ((|$,392|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
  (()
   (let-syntax (($
                 (λ (stx)
@@ -3059,21 +3610,7 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) '()))))
-
-($nt391
- ((|$,392| argument)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
 (|$,392|
  ((|,|)
@@ -3089,8 +3626,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($*388
- ((*)
+($:388
+ ((:)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3101,7 +3638,7 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "*"))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
 ($nt386
  ((|$,387|)
@@ -3143,8 +3680,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt381
- (($nt382)
+($nt382
+ (($nt383)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3157,35 +3694,9 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) $$)))))
-
-($nt382
- (($nt383 $nt382)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
 ($nt383
- ((argument |$,384|)
+ (($nt384 $nt383)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3196,9 +3707,35 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 1)))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-(|$,384|
+($nt384
+ ((|$,385| test)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
+
+(|$,385|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -3212,22 +3749,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($:379
- ((:)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($nt374
- (($nt375)
+($nt380
+ ((|$,381|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3251,9 +3774,23 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+(|$,381|
+ ((|,|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
 ($nt375
- ((|$(376| $nt377 |$)378|)
+ (($nt376)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3264,10 +3801,11 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) $$)))))
 
-(|$)378|
- ((|)|)
+($nt376
+ (($nt377 $nt376)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3278,10 +3816,102 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ")"))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
 ($nt377
- ((arglist)
+ ((|$,378| $nt379)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
+
+($nt379
+ ((expr)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ ((star_expr)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
+
+(|$,378|
+ ((|,|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+
+($nt374
+ ((expr)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ ((star_expr)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
+
+($nt373
+ ((test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3306,8 +3936,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$(376|
- ((|(|)
+($:372
+ ((:)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3318,51 +3948,10 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "("))))
-
-($class373
- ((class)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "class"))))
-
-($nt370
- ((test)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
- ((test $rep53 $nt371)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
-      (cons ($ 1) ($ 2))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
 ($nt371
- ((|$,372|)
+ ((sliceop)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3387,8 +3976,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$,372|
- ((|,|)
+($:370
+ ((:)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3399,10 +3988,10 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($nt366
- (($nt367)
+($nt369
+ ((sliceop)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3413,37 +4002,36 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (recombine (car $$))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($:368
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
 ($nt367
- ((nt51)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
- ((nt51 $rep52 $nt368)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
-      (cons ($ 1) ($ 2))))))
-
-($nt368
- ((|$,369|)
+ ((sliceop)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3468,21 +4056,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$,369|
- ((|,|)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
-
-($:365
+($:366
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -3496,8 +4070,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($nt363
- ((|$,364|)
+($nt365
+ ((sliceop)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3522,8 +4096,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$,364|
- ((|,|)
+($:364
+ ((:)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3534,439 +4108,9 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
-
-($nt359
- (($nt360)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) $$)))))
-
-($nt360
- (($nt361 $nt360)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) '()))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
 ($nt361
- ((|$,362| test)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
-
-(|$,362|
- ((|,|)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
-
-($nt357
- ((|$,358|)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-(|$,358|
- ((|,|)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
-
-($nt352
- (($nt353)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) $$)))))
-
-($nt353
- (($nt354 $nt353)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) '()))))
-
-($nt354
- ((|$,355| $nt356)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
-
-($nt356
- ((expr)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- ((star_expr)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
-
-(|$,355|
- ((|,|)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
-
-($nt351
- ((expr)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- ((star_expr)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
-
-($nt350
- ((test)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($:349
- ((:)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($nt348
- ((sliceop)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($:347
- ((:)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($nt346
- ((sliceop)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($:345
- ((:)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($nt344
- ((sliceop)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($:343
- ((:)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($nt342
- ((sliceop)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($:341
- ((:)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($nt338
  ((subscript)
   (let-syntax (($
                 (λ (stx)
@@ -3979,7 +4123,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
- ((subscript $rep50 $nt339)
+ ((subscript $rep53 $nt362)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3993,8 +4137,8 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
       (cons ($ 1) ($ 2))))))
 
-($nt339
- ((|$,340|)
+($nt362
+ ((|$,363|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4019,7 +4163,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$,340|
+(|$,363|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -4033,7 +4177,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($.337
+($.360
  ((|.|)
   (let-syntax (($
                 (λ (stx)
@@ -4047,7 +4191,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "."))))
 
-(|$]336|
+(|$]359|
  ((|]|)
   (let-syntax (($
                 (λ (stx)
@@ -4061,7 +4205,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "]"))))
 
-(|$[335|
+(|$[358|
  ((|[|)
   (let-syntax (($
                 (λ (stx)
@@ -4075,7 +4219,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "["))))
 
-(|$)334|
+(|$)357|
  ((|)|)
   (let-syntax (($
                 (λ (stx)
@@ -4089,7 +4233,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ")"))))
 
-(|$(333|
+(|$(356|
  ((|(|)
   (let-syntax (($
                 (λ (stx)
@@ -4103,7 +4247,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "("))))
 
-(|$)332|
+(|$)355|
  ((|)|)
   (let-syntax (($
                 (λ (stx)
@@ -4117,7 +4261,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ")"))))
 
-(|$(331|
+(|$(354|
  ((|(|)
   (let-syntax (($
                 (λ (stx)
@@ -4131,7 +4275,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "("))))
 
-($nt328
+($nt351
  (()
   (let-syntax (($
                 (λ (stx)
@@ -4144,7 +4288,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '())))
- ((nt48)
+ ((nt51)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4156,7 +4300,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
- ((nt48 $rep49 $nt329)
+ ((nt51 $rep52 $nt352)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4170,8 +4314,8 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
       (cons ($ 1) ($ 2))))))
 
-($nt329
- ((|$,330|)
+($nt352
+ ((|$,353|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4196,7 +4340,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$,330|
+(|$,353|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -4210,8 +4354,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt326
- ((|$,327|)
+($nt349
+ ((|$,350|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4236,7 +4380,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$,327|
+(|$,350|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -4250,7 +4394,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt325
+($nt348
  ((test)
   (let-syntax (($
                 (λ (stx)
@@ -4276,7 +4420,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-($nt324
+($nt347
  ((test)
   (let-syntax (($
                 (λ (stx)
@@ -4302,7 +4446,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-($False323
+($False346
  ((False)
   (let-syntax (($
                 (λ (stx)
@@ -4316,7 +4460,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "False"))))
 
-($True322
+($True345
  ((True)
   (let-syntax (($
                 (λ (stx)
@@ -4330,7 +4474,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "True"))))
 
-($None321
+($None344
  ((None)
   (let-syntax (($
                 (λ (stx)
@@ -4344,7 +4488,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "None"))))
 
-($...320
+($...343
  ((...)
   (let-syntax (($
                 (λ (stx)
@@ -4358,8 +4502,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "..."))))
 
-($nt319
- ((STRING $nt319)
+($nt342
+ ((STRING $nt342)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4384,7 +4528,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1))))))
 
-(|$}318|
+(|$}341|
  ((|}|)
   (let-syntax (($
                 (λ (stx)
@@ -4398,7 +4542,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "}"))))
 
-(|${317|
+(|${340|
  ((|{|)
   (let-syntax (($
                 (λ (stx)
@@ -4412,7 +4556,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "{"))))
 
-(|$}316|
+(|$}339|
  ((|}|)
   (let-syntax (($
                 (λ (stx)
@@ -4426,7 +4570,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "}"))))
 
-(|${315|
+(|${338|
  ((|{|)
   (let-syntax (($
                 (λ (stx)
@@ -4440,7 +4584,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "{"))))
 
-(|$]314|
+(|$]337|
  ((|]|)
   (let-syntax (($
                 (λ (stx)
@@ -4454,7 +4598,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "]"))))
 
-(|$[313|
+(|$[336|
  ((|[|)
   (let-syntax (($
                 (λ (stx)
@@ -4468,7 +4612,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "["))))
 
-(|$]312|
+(|$]335|
  ((|]|)
   (let-syntax (($
                 (λ (stx)
@@ -4482,7 +4626,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "]"))))
 
-(|$[311|
+(|$[334|
  ((|[|)
   (let-syntax (($
                 (λ (stx)
@@ -4496,7 +4640,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "["))))
 
-(|$)310|
+(|$)333|
  ((|)|)
   (let-syntax (($
                 (λ (stx)
@@ -4510,7 +4654,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ")"))))
 
-(|$(309|
+(|$(332|
  ((|(|)
   (let-syntax (($
                 (λ (stx)
@@ -4524,7 +4668,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "("))))
 
-(|$)308|
+(|$)331|
  ((|)|)
   (let-syntax (($
                 (λ (stx)
@@ -4538,7 +4682,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ")"))))
 
-($nt307
+($nt330
  ((yield_expr)
   (let-syntax (($
                 (λ (stx)
@@ -4564,7 +4708,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-(|$(306|
+(|$(329|
  ((|(|)
   (let-syntax (($
                 (λ (stx)
@@ -4578,8 +4722,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "("))))
 
-($nt303
- (($nt304)
+($nt326
+ (($nt327)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4604,8 +4748,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt304
- (($**305 factor)
+($nt327
+ (($**328 factor)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4618,7 +4762,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
 
-($**305
+($**328
  ((**)
   (let-syntax (($
                 (λ (stx)
@@ -4632,8 +4776,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "**"))))
 
-($nt302
- ((trailer $nt302)
+($nt325
+ ((trailer $nt325)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4658,8 +4802,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($nt298
- (($+299)
+($nt321
+ (($+322)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4672,7 +4816,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'UAdd))))
- (($-300)
+ (($-323)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4685,7 +4829,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'USub))))
- (($~301)
+ (($~324)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4699,7 +4843,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Invert)))))
 
-($~301
+($~324
  ((~)
   (let-syntax (($
                 (λ (stx)
@@ -4713,7 +4857,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "~"))))
 
-($-300
+($-323
  ((-)
   (let-syntax (($
                 (λ (stx)
@@ -4727,7 +4871,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "-"))))
 
-($+299
+($+322
  ((+)
   (let-syntax (($
                 (λ (stx)
@@ -4741,8 +4885,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "+"))))
 
-($nt293
- (($*294)
+($nt316
+ (($*317)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4755,7 +4899,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Mult))))
- (($/295)
+ (($/318)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4768,7 +4912,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Div))))
- (($%296)
+ (($%319)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4781,7 +4925,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Mod))))
- (($//297)
+ (($//320)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -4795,7 +4939,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'FloorDiv)))))
 
-($//297
+($//320
  ((//)
   (let-syntax (($
                 (λ (stx)
@@ -4809,7 +4953,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "//"))))
 
-($%296
+($%319
  ((%)
   (let-syntax (($
                 (λ (stx)
@@ -4823,7 +4967,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "%"))))
 
-($/295
+($/318
  ((/)
   (let-syntax (($
                 (λ (stx)
@@ -4837,7 +4981,220 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "/"))))
 
-($*294
+($*317
+ ((*)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "*"))))
+
+($nt313
+ (($+314)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Add))))
+ (($-315)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Sub)))))
+
+($-315
+ ((-)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "-"))))
+
+($+314
+ ((+)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "+"))))
+
+($nt310
+ (($<<311)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'LShift))))
+ (($>>312)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'RShift)))))
+
+($>>312
+ ((>>)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ">>"))))
+
+($<<311
+ ((<<)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "<<"))))
+
+($nt308
+ (($&309)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'BitAnd)))))
+
+($&309
+ ((&)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "&"))))
+
+($nt306
+ (($^307)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'BitXor)))))
+
+($^307
+ ((^)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "^"))))
+
+($nt304
+ (($\|305)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'BitOr)))))
+
+($\|305
+ ((\|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "|"))))
+
+($*303
  ((*)
   (let-syntax (($
                 (λ (stx)
@@ -4852,220 +5209,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "*"))))
 
 ($nt290
- (($+291)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Add))))
- (($-292)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Sub)))))
-
-($-292
- ((-)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "-"))))
-
-($+291
- ((+)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "+"))))
-
-($nt287
- (($<<288)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'LShift))))
- (($>>289)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'RShift)))))
-
-($>>289
- ((>>)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ">>"))))
-
-($<<288
- ((<<)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "<<"))))
-
-($nt285
- (($&286)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'BitAnd)))))
-
-($&286
- ((&)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "&"))))
-
-($nt283
- (($^284)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'BitXor)))))
-
-($^284
- ((^)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "^"))))
-
-($nt281
- (($\|282)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
-      (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'BitOr)))))
-
-($\|282
- ((\|)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "|"))))
-
-($*280
- ((*)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "*"))))
-
-($nt267
- (($<268)
+ (($<291)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5078,7 +5222,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Lt))))
- (($>269)
+ (($>292)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5091,7 +5235,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Gt))))
- (($==270)
+ (($==293)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5104,7 +5248,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Eq))))
- (($>=271)
+ (($>=294)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5117,7 +5261,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'GtE))))
- (($<=272)
+ (($<=295)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5130,7 +5274,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'LtE))))
- (($!=273)
+ (($!=296)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5143,7 +5287,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'NotEq))))
- (($in274)
+ (($in297)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5156,7 +5300,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'In))))
- (($not275 $in276)
+ (($not298 $in299)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5168,7 +5312,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) 'NotIn)))
- (($is277)
+ (($is300)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5181,7 +5325,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) 'Is))))
- (($is278 $not279)
+ (($is301 $not302)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5194,7 +5338,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) 'IsNot))))
 
-($not279
+($not302
  ((not)
   (let-syntax (($
                 (λ (stx)
@@ -5208,7 +5352,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "not"))))
 
-($is278
+($is301
  ((is)
   (let-syntax (($
                 (λ (stx)
@@ -5222,7 +5366,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "is"))))
 
-($is277
+($is300
  ((is)
   (let-syntax (($
                 (λ (stx)
@@ -5236,7 +5380,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "is"))))
 
-($in276
+($in299
  ((in)
   (let-syntax (($
                 (λ (stx)
@@ -5250,7 +5394,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "in"))))
 
-($not275
+($not298
  ((not)
   (let-syntax (($
                 (λ (stx)
@@ -5264,7 +5408,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "not"))))
 
-($in274
+($in297
  ((in)
   (let-syntax (($
                 (λ (stx)
@@ -5278,7 +5422,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "in"))))
 
-($!=273
+($!=296
  ((!=)
   (let-syntax (($
                 (λ (stx)
@@ -5292,7 +5436,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "!="))))
 
-($<=272
+($<=295
  ((<=)
   (let-syntax (($
                 (λ (stx)
@@ -5306,7 +5450,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "<="))))
 
-($>=271
+($>=294
  ((>=)
   (let-syntax (($
                 (λ (stx)
@@ -5320,7 +5464,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ">="))))
 
-($==270
+($==293
  ((==)
   (let-syntax (($
                 (λ (stx)
@@ -5334,7 +5478,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "=="))))
 
-($>269
+($>292
  ((>)
   (let-syntax (($
                 (λ (stx)
@@ -5348,7 +5492,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ">"))))
 
-($<268
+($<291
  ((<)
   (let-syntax (($
                 (λ (stx)
@@ -5362,7 +5506,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "<"))))
 
-($not266
+($not289
  ((not)
   (let-syntax (($
                 (λ (stx)
@@ -5376,7 +5520,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "not"))))
 
-($and265
+($and288
  ((and)
   (let-syntax (($
                 (λ (stx)
@@ -5390,7 +5534,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "and"))))
 
-($or264
+($or287
  ((or)
   (let-syntax (($
                 (λ (stx)
@@ -5404,7 +5548,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "or"))))
 
-($:263
+($:286
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -5418,7 +5562,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($nt262
+($nt285
  ((varargslist)
   (let-syntax (($
                 (λ (stx)
@@ -5444,7 +5588,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($lambda261
+($lambda284
  ((lambda)
   (let-syntax (($
                 (λ (stx)
@@ -5458,7 +5602,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "lambda"))))
 
-($:260
+($:283
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -5472,7 +5616,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($nt259
+($nt282
  ((varargslist)
   (let-syntax (($
                 (λ (stx)
@@ -5498,7 +5642,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($lambda258
+($lambda281
  ((lambda)
   (let-syntax (($
                 (λ (stx)
@@ -5512,8 +5656,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "lambda"))))
 
-($nt254
- (($nt255)
+($nt277
+ (($nt278)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5538,8 +5682,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt255
- (($if256 or_test $else257 test)
+($nt278
+ (($if279 or_test $else280 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5553,7 +5697,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4)))))
       `(,($ 2) ,($ 4))))))
 
-($else257
+($else280
  ((else)
   (let-syntax (($
                 (λ (stx)
@@ -5567,7 +5711,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "else"))))
 
-($if256
+($if279
  ((if)
   (let-syntax (($
                 (λ (stx)
@@ -5581,8 +5725,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "if"))))
 
-($nt253
- ((stmt $nt253)
+($nt276
+ ((stmt $nt276)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5607,8 +5751,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1))))))
 
-($nt248
- (($nt249)
+($nt271
+ (($nt272)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5633,8 +5777,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt249
- ((test $nt250)
+($nt272
+ ((test $nt273)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5648,8 +5792,8 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
       (if ($ 2) `(,($ 1) ,($ 2)) `(,($ 1) #f))))))
 
-($nt250
- (($nt251)
+($nt273
+ (($nt274)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5674,8 +5818,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt251
- (($as252 NAME)
+($nt274
+ (($as275 NAME)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5688,7 +5832,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (string->symbol ($ 2))))))
 
-($as252
+($as275
  ((as)
   (let-syntax (($
                 (λ (stx)
@@ -5702,7 +5846,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "as"))))
 
-($except247
+($except270
  ((except)
   (let-syntax (($
                 (λ (stx)
@@ -5715,6 +5859,441 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "except"))))
+
+($nt267
+ (($nt268)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($nt268
+ (($as269 expr)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
+
+($as269
+ ((as)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "as"))))
+
+($:266
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($nt265
+ ((with_item)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
+ ((with_item $rep50)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2))))))
+
+($with264
+ ((with)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "with"))))
+
+($nt237
+ (($nt238 $nt241 $nt244)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      (if ($ 3) `(,($ 1) ,($ 2) ,($ 3)) `(,($ 1) ,($ 2) ())))))
+ (($nt248 $nt251)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
+      (if ($ 2) `(,($ 1) ,($ 2) ()) `(,($ 1) () ())))))
+ (($nt255 $nt258)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
+      (if ($ 2) `(,($ 1) () ,($ 2)) `(,($ 1) () ())))))
+ (($finally262 $:263 suite)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) `(() () ,($ 3))))))
+
+($:263
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($finally262
+ ((finally)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "finally"))))
+
+($nt258
+ (($nt259)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($nt259
+ (($finally260 $:261 suite)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
+
+($:261
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($finally260
+ ((finally)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "finally"))))
+
+($nt255
+ (($nt256 $nt255)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
+ (($nt256)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1))))))
+
+($nt256
+ ((except_clause $:257 suite)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      `(except ,@($ 1) ,@($ 3))))))
+
+($:257
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($nt251
+ (($nt252)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($nt252
+ (($else253 $:254 suite)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
+
+($:254
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($else253
+ ((else)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "else"))))
+
+($nt248
+ (($nt249 $nt248)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
+ (($nt249)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1))))))
+
+($nt249
+ ((except_clause $:250 suite)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      `(except ,@($ 1) ,@($ 3))))))
+
+($:250
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
 ($nt244
  (($nt245)
@@ -5743,7 +6322,7 @@
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
 ($nt245
- (($as246 expr)
+ (($finally246 $:247 suite)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5754,10 +6333,10 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
 
-($as246
- ((as)
+($:247
+ ((:)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5768,7 +6347,35 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "as"))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($finally246
+ ((finally)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "finally"))))
+
+($nt241
+ (($else242 $:243 suite)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
 
 ($:243
  ((:)
@@ -5784,8 +6391,22 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($nt240
- (($nt241 $nt240)
+($else242
+ ((else)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "else"))))
+
+($nt238
+ (($nt239 $nt238)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5797,7 +6418,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
- (()
+ (($nt239)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5808,10 +6429,10 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) '()))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1))))))
 
-($nt241
- ((|$,242| with_item)
+($nt239
+ ((except_clause $:240 suite)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -5822,63 +6443,10 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
+      `(except ,@($ 1) ,@($ 3))))))
 
-(|$,242|
- ((|,|)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
-
-($with239
- ((with)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "with"))))
-
-($nt225
- (($nt226 $nt229 $nt233)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$)))
- (($finally237 $:238 suite)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
-
-($:238
+($:240
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -5891,60 +6459,6 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($finally237
- ((finally)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "finally"))))
-
-($nt233
- (($nt234)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($nt234
- (($finally235 $:236 suite)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
 
 ($:236
  ((:)
@@ -5960,157 +6474,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($finally235
- ((finally)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "finally"))))
-
-($nt229
- (($nt230)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($nt230
- (($else231 $:232 suite)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
-
-($:232
- ((:)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($else231
- ((else)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "else"))))
-
-($nt226
- (($nt227 $nt226)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
- (($nt227)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1))))))
-
-($nt227
- ((except_clause $:228 suite)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
-
-($:228
- ((:)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($:224
- ((:)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
-
-($try223
+($try235
  ((try)
   (let-syntax (($
                 (λ (stx)
@@ -6124,8 +6488,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "try"))))
 
-($nt219
- (($nt220)
+($nt231
+ (($nt232)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6150,8 +6514,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt220
- (($else221 $:222 suite)
+($nt232
+ (($else233 $:234 suite)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6162,9 +6526,9 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
 
-($:222
+($:234
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -6178,7 +6542,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($else221
+($else233
  ((else)
   (let-syntax (($
                 (λ (stx)
@@ -6192,7 +6556,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "else"))))
 
-($:218
+($:230
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -6206,7 +6570,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($in217
+($in229
  ((in)
   (let-syntax (($
                 (λ (stx)
@@ -6220,7 +6584,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "in"))))
 
-($for216
+($for228
  ((for)
   (let-syntax (($
                 (λ (stx)
@@ -6233,6 +6597,243 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "for"))))
+
+($nt224
+ (($nt225)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($nt225
+ (($else226 $:227 suite)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
+
+($:227
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($else226
+ ((else)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "else"))))
+
+($:223
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($while222
+ ((while)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "while"))))
+
+($nt199
+ (($if200 test $:201 suite $nt202)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5)))))
+      (if ($ 5)
+        `(,($ 2) ,@($ 4) ,@(process-if '() ($ 5)))
+        `(,($ 2) ,@($ 4))))))
+ (($if206 test $:207 suite $nt208 $nt212)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5) ($ 6)))))
+      (if ($ 6)
+        `(,($ 2) ,@($ 4) ,@(process-if ($ 6) ($ 5)))
+        `(,($ 2) ,@($ 4) ,@(process-if '() ($ 5)))))))
+ (($if216 test $:217 suite $nt218)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5)))))
+      (if ($ 5) `(,($ 2) ,@($ 4) ,($ 5)) `(,($ 2) ,@($ 4) ()))))))
+
+($nt218
+ (($nt219)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($nt219
+ (($else220 $:221 suite)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
+
+($:221
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($else220
+ ((else)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "else"))))
+
+($:217
+ ((:)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
+
+($if216
+ ((if)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "if"))))
 
 ($nt212
  (($nt213)
@@ -6272,7 +6873,7 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
 
 ($:215
  ((:)
@@ -6302,6 +6903,47 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "else"))))
 
+($nt208
+ (($nt209 $nt208)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
+ (($nt209)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1))))))
+
+($nt209
+ (($elif210 test $:211 suite)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4)))))
+      `(,($ 2) ,($ 4))))))
+
 ($:211
  ((:)
   (let-syntax (($
@@ -6316,8 +6958,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($while210
- ((while)
+($elif210
+ ((elif)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6328,49 +6970,9 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "while"))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "elif"))))
 
-($nt206
- (($nt207)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($nt207
- (($else208 $:209 suite)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
-
-($:209
+($:207
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -6384,8 +6986,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($else208
- ((else)
+($if206
+ ((if)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6396,7 +6998,7 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "else"))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "if"))))
 
 ($nt202
  (($nt203 $nt202)
@@ -6436,7 +7038,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4))))) $$))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4)))))
+      `(,($ 2) ,($ 4))))))
 
 ($:205
  ((:)
@@ -6494,34 +7097,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "if"))))
 
-($nt197
- (($nt198)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
 ($nt198
- ((|$,199| test)
+ ((test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6532,10 +7109,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
-
-(|$,199|
- ((|,|)
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
+ ((test $rep49)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6546,9 +7121,9 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2))))))
 
-($assert196
+($assert197
  ((assert)
   (let-syntax (($
                 (λ (stx)
@@ -6562,8 +7137,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "assert"))))
 
-($nt193
- (($nt194 $nt193)
+($nt196
+ ((NAME)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6574,8 +7149,8 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
- (()
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
+ ((NAME $rep48)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6586,37 +7161,9 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) '()))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2))))))
 
-($nt194
- ((|$,195| NAME)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
-
-(|$,195|
- ((|,|)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
-
-($nonlocal192
+($nonlocal195
  ((nonlocal)
   (let-syntax (($
                 (λ (stx)
@@ -6630,8 +7177,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "nonlocal"))))
 
-($nt189
- (($nt190 $nt189)
+($nt192
+ (($nt193 $nt192)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6656,8 +7203,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($nt190
- ((|$,191| NAME)
+($nt193
+ ((|$,194| NAME)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6670,7 +7217,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
-(|$,191|
+(|$,194|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -6684,7 +7231,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($global188
+($global191
  ((global)
   (let-syntax (($
                 (λ (stx)
@@ -6697,6 +7244,60 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "global"))))
+
+($nt188
+ (($nt189 $nt188)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) '()))))
+
+($nt189
+ (($.190 NAME)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
+
+($.190
+ ((|.|)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "."))))
 
 ($nt185
  (($nt186 $nt185)
@@ -6725,7 +7326,7 @@
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
 ($nt186
- (($.187 NAME)
+ ((|$,187| dotted_as_name)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6738,61 +7339,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
-($.187
- ((|.|)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "."))))
-
-($nt182
- (($nt183 $nt182)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) '()))))
-
-($nt183
- ((|$,184| dotted_as_name)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
-
-(|$,184|
+(|$,187|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -6806,8 +7353,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt180
- ((|$,181|)
+($nt183
+ ((|$,184|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6832,7 +7379,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$,181|
+(|$,184|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -6846,8 +7393,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt177
- (($nt178 $nt177)
+($nt180
+ (($nt181 $nt180)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6872,8 +7419,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($nt178
- ((|$,179| import_as_name)
+($nt181
+ ((|$,182| import_as_name)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6886,7 +7433,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
-(|$,179|
+(|$,182|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -6899,6 +7446,60 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
+
+($nt177
+ (($nt178)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($nt178
+ (($as179 NAME)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
+
+($as179
+ ((as)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "as"))))
 
 ($nt174
  (($nt175)
@@ -6954,8 +7555,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "as"))))
 
-($nt171
- (($nt172)
+($nt170
+ (($*171)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -6967,61 +7568,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($nt172
- (($as173 NAME)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
-
-($as173
- ((as)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) "as"))))
-
-($nt167
- (($*168)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- ((|$(169| import_as_names |$)170|)
+ ((|$(172| import_as_names |$)173|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7046,7 +7593,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-(|$)170|
+(|$)173|
  ((|)|)
   (let-syntax (($
                 (λ (stx)
@@ -7060,7 +7607,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ")"))))
 
-(|$(169|
+(|$(172|
  ((|(|)
   (let-syntax (($
                 (λ (stx)
@@ -7074,7 +7621,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "("))))
 
-($*168
+($*171
  ((*)
   (let-syntax (($
                 (λ (stx)
@@ -7088,7 +7635,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "*"))))
 
-($import166
+($import169
  ((import)
   (let-syntax (($
                 (λ (stx)
@@ -7102,8 +7649,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "import"))))
 
-($nt157
- (($nt158 dotted_name)
+($nt160
+ (($nt161 dotted_name)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7115,7 +7662,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$)))
- (($nt162)
+ (($nt165)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7128,8 +7675,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-($nt162
- (($nt163 $nt162)
+($nt165
+ (($nt166 $nt165)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7141,7 +7688,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) (cons ($ 1) ($ 2)))))
- (($nt163)
+ (($nt166)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7154,8 +7701,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1))))))
 
-($nt163
- (($.164)
+($nt166
+ (($.167)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7167,7 +7714,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (($...165)
+ (($...168)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7180,7 +7727,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-($...165
+($...168
  ((...)
   (let-syntax (($
                 (λ (stx)
@@ -7194,7 +7741,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "..."))))
 
-($.164
+($.167
  ((|.|)
   (let-syntax (($
                 (λ (stx)
@@ -7208,8 +7755,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "."))))
 
-($nt158
- (($nt159 $nt158)
+($nt161
+ (($nt162 $nt161)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7234,8 +7781,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($nt159
- (($.160)
+($nt162
+ (($.163)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7247,7 +7794,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (($...161)
+ (($...164)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7260,7 +7807,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-($...161
+($...164
  ((...)
   (let-syntax (($
                 (λ (stx)
@@ -7274,7 +7821,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "..."))))
 
-($.160
+($.163
  ((|.|)
   (let-syntax (($
                 (λ (stx)
@@ -7288,7 +7835,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "."))))
 
-($from156
+($from159
  ((from)
   (let-syntax (($
                 (λ (stx)
@@ -7302,7 +7849,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "from"))))
 
-($import155
+($import158
  ((import)
   (let-syntax (($
                 (λ (stx)
@@ -7316,8 +7863,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "import"))))
 
-($nt150
- (($nt151)
+($nt153
+ (($nt154)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7342,8 +7889,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt151
- ((test $nt152)
+($nt154
+ ((test $nt155)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7357,8 +7904,8 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
       (if ($ 2) `(,($ 1) ,($ 2)) `(,($ 1)))))))
 
-($nt152
- (($nt153)
+($nt155
+ (($nt156)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7383,8 +7930,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt153
- (($from154 test)
+($nt156
+ (($from157 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7397,7 +7944,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
 
-($from154
+($from157
  ((from)
   (let-syntax (($
                 (λ (stx)
@@ -7411,7 +7958,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "from"))))
 
-($raise149
+($raise152
  ((raise)
   (let-syntax (($
                 (λ (stx)
@@ -7425,7 +7972,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "raise"))))
 
-($nt148
+($nt151
  ((testlist)
   (let-syntax (($
                 (λ (stx)
@@ -7451,7 +7998,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($return147
+($return150
  ((return)
   (let-syntax (($
                 (λ (stx)
@@ -7465,7 +8012,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "return"))))
 
-($continue146
+($continue149
  ((continue)
   (let-syntax (($
                 (λ (stx)
@@ -7479,7 +8026,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "continue"))))
 
-($break145
+($break148
  ((break)
   (let-syntax (($
                 (λ (stx)
@@ -7493,7 +8040,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "break"))))
 
-($pass144
+($pass147
  ((pass)
   (let-syntax (($
                 (λ (stx)
@@ -7507,7 +8054,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "pass"))))
 
-($del143
+($del146
  ((del)
   (let-syntax (($
                 (λ (stx)
@@ -7521,7 +8068,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "del"))))
 
-($//=142
+($//=145
  ((//=)
   (let-syntax (($
                 (λ (stx)
@@ -7535,7 +8082,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "//="))))
 
-($**=141
+($**=144
  ((**=)
   (let-syntax (($
                 (λ (stx)
@@ -7549,7 +8096,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "**="))))
 
-($>>=140
+($>>=143
  ((>>=)
   (let-syntax (($
                 (λ (stx)
@@ -7563,7 +8110,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ">>="))))
 
-($<<=139
+($<<=142
  ((<<=)
   (let-syntax (($
                 (λ (stx)
@@ -7577,7 +8124,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "<<="))))
 
-($^=138
+($^=141
  ((^=)
   (let-syntax (($
                 (λ (stx)
@@ -7591,7 +8138,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "^="))))
 
-($\|=137
+($\|=140
  ((\|=)
   (let-syntax (($
                 (λ (stx)
@@ -7605,7 +8152,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "|="))))
 
-($&=136
+($&=139
  ((&=)
   (let-syntax (($
                 (λ (stx)
@@ -7619,7 +8166,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "&="))))
 
-($%=135
+($%=138
  ((%=)
   (let-syntax (($
                 (λ (stx)
@@ -7633,7 +8180,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "%="))))
 
-($/=134
+($/=137
  ((/=)
   (let-syntax (($
                 (λ (stx)
@@ -7647,7 +8194,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "/="))))
 
-($*=133
+($*=136
  ((*=)
   (let-syntax (($
                 (λ (stx)
@@ -7661,7 +8208,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "*="))))
 
-($-=132
+($-=135
  ((-=)
   (let-syntax (($
                 (λ (stx)
@@ -7675,7 +8222,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "-="))))
 
-($+=131
+($+=134
  ((+=)
   (let-syntax (($
                 (λ (stx)
@@ -7689,8 +8236,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "+="))))
 
-($nt129
- ((|$,130|)
+($nt132
+ ((|$,133|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7715,7 +8262,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$,130|
+(|$,133|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -7729,7 +8276,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt126
+($nt129
  ((small_stmt)
   (let-syntax (($
                 (λ (stx)
@@ -7742,7 +8289,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1)))))
- ((small_stmt $rep45 $nt127)
+ ((small_stmt $rep45 $nt130)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7756,8 +8303,8 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
       (cons ($ 1) ($ 2))))))
 
-($nt127
- ((|$;128|)
+($nt130
+ ((|$;131|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7782,7 +8329,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$;128|
+(|$;131|
  ((|;|)
   (let-syntax (($
                 (λ (stx)
@@ -7796,7 +8343,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ";"))))
 
-($**125
+($**128
  ((**)
   (let-syntax (($
                 (λ (stx)
@@ -7810,8 +8357,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "**"))))
 
-($nt122
- (($nt123)
+($nt125
+ (($nt126)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7836,8 +8383,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt123
- (($=124 test)
+($nt126
+ (($=127 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7850,7 +8397,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
 
-($=124
+($=127
  ((=)
   (let-syntax (($
                 (λ (stx)
@@ -7864,7 +8411,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
-(|$,121|
+(|$,124|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -7878,8 +8425,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt117
- (($nt118)
+($nt120
+ (($nt121)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7904,8 +8451,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt118
- ((|$,119| $**120 vfpdef)
+($nt121
+ ((|$,122| $**123 vfpdef)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7918,7 +8465,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
 
-($**120
+($**123
  ((**)
   (let-syntax (($
                 (λ (stx)
@@ -7932,7 +8479,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "**"))))
 
-(|$,119|
+(|$,122|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -7946,8 +8493,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt115
- (($nt116)
+($nt118
+ (($nt119)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7962,8 +8509,8 @@
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1)))
         (recombine-arglist $$))))))
 
-($nt116
- ((kwonly $nt116)
+($nt119
+ ((kwonly $nt119)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -7988,7 +8535,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($*114
+($*117
  ((*)
   (let-syntax (($
                 (λ (stx)
@@ -8002,8 +8549,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "*"))))
 
-($nt101
- (($nt102 $nt109)
+($nt104
+ (($nt105 $nt112)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8050,47 +8597,6 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-($nt109
- (($nt110)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($nt110
- ((|$,111| $nt112)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
-      (if ($ 2) ($ 2) `(() () () () () () () ()))))))
-
 ($nt112
  (($nt113)
   (let-syntax (($
@@ -8118,6 +8624,47 @@
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
 ($nt113
+ ((|$,114| $nt115)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
+      (if ($ 2) ($ 2) `(() () () () () () () ()))))))
+
+($nt115
+ (($nt116)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($nt116
  ((arg-kwonly-kwarg)
   (let-syntax (($
                 (λ (stx)
@@ -8143,7 +8690,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-(|$,111|
+(|$,114|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -8157,8 +8704,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt102
- (($nt103 $nt107)
+($nt105
+ (($nt106 $nt110)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8174,8 +8721,8 @@
         (recombine-arglist `(,($ 1) ,@($ 2)))
         (recombine-arglist `(($ 1))))))))
 
-($nt107
- (($nt108)
+($nt110
+ (($nt111)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8189,8 +8736,8 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) $$)))))
 
-($nt108
- ((kwonly $nt108)
+($nt111
+ ((kwonly $nt111)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8215,8 +8762,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($nt103
- ((vfpdef $nt104)
+($nt106
+ ((vfpdef $nt107)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8230,8 +8777,8 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
       (if ($ 2) `(,($ 1) ,($ 2) #f) `(,($ 1) #f #f))))))
 
-($nt104
- (($nt105)
+($nt107
+ (($nt108)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8256,8 +8803,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt105
- (($=106 test)
+($nt108
+ (($=109 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8270,7 +8817,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
 
-($=106
+($=109
  ((=)
   (let-syntax (($
                 (λ (stx)
@@ -8284,8 +8831,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
-($nt98
- (($nt99)
+($nt101
+ (($nt102)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8310,8 +8857,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt99
- (($:100 test)
+($nt102
+ (($:103 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8324,7 +8871,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
 
-($:100
+($:103
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -8338,7 +8885,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($**97
+($**100
  ((**)
   (let-syntax (($
                 (λ (stx)
@@ -8352,8 +8899,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "**"))))
 
-($nt94
- (($nt95)
+($nt97
+ (($nt98)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8378,8 +8925,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt95
- (($=96 test)
+($nt98
+ (($=99 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8392,7 +8939,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
 
-($=96
+($=99
  ((=)
   (let-syntax (($
                 (λ (stx)
@@ -8406,7 +8953,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
-(|$,93|
+(|$,96|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -8420,8 +8967,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt89
- (($nt90)
+($nt92
+ (($nt93)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8446,8 +8993,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt90
- ((|$,91| $**92 tfpdef)
+($nt93
+ ((|$,94| $**95 tfpdef)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8460,7 +9007,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) ($ 3)))))
 
-($**92
+($**95
  ((**)
   (let-syntax (($
                 (λ (stx)
@@ -8474,7 +9021,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "**"))))
 
-(|$,91|
+(|$,94|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -8488,8 +9035,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt87
- (($nt88)
+($nt90
+ (($nt91)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8504,8 +9051,8 @@
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1)))
         (recombine-arglist $$))))))
 
-($nt88
- ((tkwonly $nt88)
+($nt91
+ ((tkwonly $nt91)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8530,7 +9077,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($*86
+($*89
  ((*)
   (let-syntax (($
                 (λ (stx)
@@ -8544,8 +9091,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "*"))))
 
-($nt73
- (($nt74 $nt81)
+($nt76
+ (($nt77 $nt84)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8599,47 +9146,6 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-($nt81
- (($nt82)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
- (()
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list)))) #f))))
-
-($nt82
- ((|$,83| $nt84)
-  (let-syntax (($
-                (λ (stx)
-                  (syntax-case stx ()
-                    ((_ n)
-                     (datum->syntax
-                      #'n
-                      (string->symbol
-                       (string-append
-                        "$"
-                        (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
-      (if ($ 2) ($ 2) `(() () () () () () () ()))))))
-
 ($nt84
  (($nt85)
   (let-syntax (($
@@ -8667,6 +9173,47 @@
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
 ($nt85
+ ((|$,86| $nt87)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
+      (if ($ 2) ($ 2) `(() () () () () () () ()))))))
+
+($nt87
+ (($nt88)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1))))
+ (()
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list)))) #f))))
+
+($nt88
  ((targ-kwonly-kwarg)
   (let-syntax (($
                 (λ (stx)
@@ -8692,7 +9239,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-(|$,83|
+(|$,86|
  ((|,|)
   (let-syntax (($
                 (λ (stx)
@@ -8706,8 +9253,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ","))))
 
-($nt74
- (($nt75 $nt79)
+($nt77
+ (($nt78 $nt82)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8723,8 +9270,8 @@
         (recombine-arglist `(,($ 1) ,@($ 2)))
         (recombine-arglist `(($ 1))))))))
 
-($nt79
- (($nt80)
+($nt82
+ (($nt83)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8738,8 +9285,8 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1))) $$)))))
 
-($nt80
- ((tkwonly $nt80)
+($nt83
+ ((tkwonly $nt83)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8764,8 +9311,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($nt75
- ((tfpdef $nt76)
+($nt78
+ ((tfpdef $nt79)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8781,8 +9328,8 @@
         `(,(car ($ 1)) ,($ 2) ,(cadr ($ 1)))
         `(,(car ($ 1)) #f ,(cadr ($ 1))))))))
 
-($nt76
- (($nt77)
+($nt79
+ (($nt80)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8807,8 +9354,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt77
- (($=78 test)
+($nt80
+ (($=81 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8821,7 +9368,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) ($ 2)))))
 
-($=78
+($=81
  ((=)
   (let-syntax (($
                 (λ (stx)
@@ -8835,7 +9382,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
-(|$)72|
+(|$)75|
  ((|)|)
   (let-syntax (($
                 (λ (stx)
@@ -8849,7 +9396,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ")"))))
 
-($nt71
+($nt74
  ((typedargslist)
   (let-syntax (($
                 (λ (stx)
@@ -8875,7 +9422,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$(70|
+(|$(73|
  ((|(|)
   (let-syntax (($
                 (λ (stx)
@@ -8889,7 +9436,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "("))))
 
-($:69
+($:72
  ((:)
   (let-syntax (($
                 (λ (stx)
@@ -8903,8 +9450,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ":"))))
 
-($nt66
- (($nt67)
+($nt69
+ (($nt70)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8929,8 +9476,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt67
- (($->68 test)
+($nt70
+ (($->71 test)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -8943,7 +9490,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2))))) $$))))
 
-($->68
+($->71
  ((->)
   (let-syntax (($
                 (λ (stx)
@@ -8957,7 +9504,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "->"))))
 
-($def65
+($def68
  ((def)
   (let-syntax (($
                 (λ (stx)
@@ -8971,7 +9518,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "def"))))
 
-($nt64
+($nt67
  ((classdef)
   (let-syntax (($
                 (λ (stx)
@@ -8997,8 +9544,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ($ 1)))))
 
-($nt63
- ((decorator $nt63)
+($nt66
+ ((decorator $nt66)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -9023,8 +9570,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) (list ($ 1))))))
 
-($nt58
- (($nt59)
+($nt61
+ (($nt62)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -9049,8 +9596,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-($nt59
- ((|$(60| $nt61 |$)62|)
+($nt62
+ ((|$(63| $nt64 |$)65|)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -9063,7 +9610,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3))))) $$))))
 
-(|$)62|
+(|$)65|
  ((|)|)
   (let-syntax (($
                 (λ (stx)
@@ -9077,7 +9624,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) ")"))))
 
-($nt61
+($nt64
  ((arglist)
   (let-syntax (($
                 (λ (stx)
@@ -9103,7 +9650,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) #f))))
 
-(|$(60|
+(|$(63|
  ((|(|)
   (let-syntax (($
                 (λ (stx)
@@ -9117,7 +9664,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "("))))
 
-($@57
+($@60
  ((@)
   (let-syntax (($
                 (λ (stx)
@@ -9131,8 +9678,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "@"))))
 
-($nt56
- ((NEWLINE $nt56)
+($nt59
+ ((NEWLINE $nt59)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -9157,8 +9704,8 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($nt54
- (($nt55 $nt54)
+($nt57
+ (($nt58 $nt57)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -9183,7 +9730,7 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list)))) '()))))
 
-($nt55
+($nt58
  ((NEWLINE)
   (let-syntax (($
                 (λ (stx)
