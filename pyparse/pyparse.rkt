@@ -2658,7 +2658,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
-      (if ($ 2) `("a" (GeneratorExp ,($ 1) ,($ 2))) `("a" ,($ 1))))))
+      (if ($ 2) `("a" (GeneratorExp ,($ 1) ,@($ 2))) `("a" ,($ 1))))))
  ((test $=454 test)
   (let-syntax (($
                 (λ (stx)
@@ -2713,7 +2713,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
-      (if ($ 2) `("a" (GeneratorExp ,($ 1) ,($ 2))) `("a" ,($ 1))))))
+      (if ($ 2) `("a" (GeneratorExp ,($ 1) ,@($ 2))) `("a" ,($ 1))))))
  ((test $=457 test)
   (let-syntax (($
                 (λ (stx)
@@ -2768,7 +2768,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
-      (if ($ 2) `("a" (GeneratorExp ,($ 1) ,($ 2))) `("a" ,($ 1))))))
+      (if ($ 2) `("a" (GeneratorExp ,($ 1) ,@($ 2))) `("a" ,($ 1))))))
  ((test $=460 test)
   (let-syntax (($
                 (λ (stx)
@@ -2823,7 +2823,7 @@
                         "$"
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2)))))
-      (if ($ 2) `("a" (GeneratorExp ,($ 1) ,($ 2))) `("a" ,($ 1))))))
+      (if ($ 2) `("a" (GeneratorExp ,($ 1) ,@($ 2))) `("a" ,($ 1))))))
  ((test $=463 test)
   (let-syntax (($
                 (λ (stx)

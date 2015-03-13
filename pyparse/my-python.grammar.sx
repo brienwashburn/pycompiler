@@ -624,12 +624,6 @@
                     [($ 2) `(Tuple ,@($ 1))]
                     [(equal? 1 (length ($ 1))) (car ($ 1))]
                     [else `(Tuple ,@($ 1))])))
- #;(testlist ($*--> test 
-                  ($--> (rep ($*--> "," test ($ 2))) $$)
-                  (opt ",")
-		  (if (empty? ($ 2))
-		   ($ 1)
-		   `(Tuple ,($ 1) ,@($ 2)))))
 
  (dictorsetmaker
   (or ($*--> test
@@ -656,7 +650,7 @@
  (arglist ($--> (or ($--> (rep+/sep "," (or ($*--> test 
                                                    (opt handle-this-bitch)
                                                    (if ($ 2)
-                                                    `("a" (GeneratorExp ,($ 1) ,($ 2)))
+                                                    `("a" (GeneratorExp ,($ 1) ,@($ 2)))
                                                     `("a" ,($ 1))))
                                             ($*--> test 
                                                    "=" 
@@ -667,7 +661,7 @@
                     ($*--> (rep/sep "," (or ($*--> test 
                                                    (opt handle-this-bitch)
                                                    (if ($ 2)
-                                                    `("a" (GeneratorExp ,($ 1) ,($ 2)))
+                                                    `("a" (GeneratorExp ,($ 1) ,@($ 2)))
                                                     `("a" ,($ 1))))
                                             ($*--> test 
                                                    "=" 
@@ -679,7 +673,7 @@
                            (opt ($*--> "," (rep+/sep "," (or ($*--> test 
                                                    (opt handle-this-bitch)
                                                    (if ($ 2)
-                                                    `("a" (GeneratorExp ,($ 1) ,($ 2)))
+                                                    `("a" (GeneratorExp ,($ 1) ,@($ 2)))
                                                     `("a" ,($ 1))))
                                             ($*--> test 
                                                    "=" 
@@ -694,7 +688,7 @@
                     ($*--> (rep/sep "," (or ($*--> test 
                                                    (opt handle-this-bitch)
                                                    (if ($ 2)
-                                                    `("a" (GeneratorExp ,($ 1) ,($ 2)))
+                                                    `("a" (GeneratorExp ,($ 1) ,@($ 2)))
                                                     `("a" ,($ 1))))
                                             ($*--> test
                                                    "=" 
