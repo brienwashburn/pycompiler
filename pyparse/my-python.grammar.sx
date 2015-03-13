@@ -551,7 +551,9 @@
       ($*--> "{" "}" `(Dict (keys) (values)))
       ($--> (seq 'NAME) `(Name ,(string->symbol ($ 1))))
       ($--> 'NUMBER `(Num ,$$))
-      ($*--> (rep+ 'STRING) (process-string ($ 1)))
+      ($*--> (rep+ 'STRING) (cond
+                             [(bytes? (car ($ 1)))  (car (process-byte-string ($ 1)))]
+                             [else (process-string ($ 1))]))
       ($--> "..." '(Ellipsis))
       ($--> "None" `(NameConstant ,(string->symbol $$)))
       ($--> "True" `(NameConstant ,(string->symbol $$)))

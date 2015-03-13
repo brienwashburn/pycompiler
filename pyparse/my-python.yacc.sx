@@ -1854,7 +1854,10 @@
                        (string-append
                         "$"
                         (number->string (syntax->datum #'n))))))))))
-    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (process-string ($ 1)))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1)))))
+      (cond
+       ((bytes? (car ($ 1))) (car (process-byte-string ($ 1))))
+       (else (process-string ($ 1)))))))
  (($...370)
   (let-syntax (($
                 (λ (stx)

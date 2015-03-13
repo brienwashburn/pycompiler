@@ -120,15 +120,19 @@
    [(empty? second) (list first '())]
    [else `( (,first ,@(take second (- (length second) 1))) ,(last second))]))
 
+(define (process-byte-string lst)
+  (define (recurs lst currstr strs)
+     (cond
+       [(empty? lst) (list (if (equal? currstr (string->bytes/utf-8 "")) `(Bytes ,(string->bytes/utf-8 "")) (append strs `(Bytes ,currstr))))]
+       [(string? (car lst)) (error "cannot byte string append string")]
+       [else (recurs (cdr lst) (bytes-append currstr (car lst)) strs)]))
+  (recurs lst (string->bytes/utf-8 "") '()))
 
 (define (process-string lst)
   (define (recurs lst currstr strs)
      (cond
-       [(empty? lst) (if (equal? currstr "") strs (append strs `(Str ,currstr)))]
-       [(bytes? (car lst)) (recurs (cdr lst) "" 
-                                   (append (if (equal? currstr "") 
-                                       strs 
-                                       (append strs `(Str ,currstr))) `(Bytes ,(car lst))))]
+       [(empty? lst) (if (equal? currstr "") `(Str "") (append strs `(Str ,currstr)))]
+       [(bytes? (car lst)) (error "cannot string append bytestring")]
        [else (recurs (cdr lst) (string-append currstr (car lst)) strs)]))
   (recurs lst "" '()))
 
