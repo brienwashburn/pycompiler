@@ -140,6 +140,20 @@
   (recurs lst '() '()))
 
 
+(define (process-comp-for lst)
+  (define (recurs out base lst)
+      (match lst
+	['()
+	 (cdr (append out (list base)))]
+	[(list (list for args in target if))
+	 (cdr (append (append out (list base)) `((,for ,args, in ,target ,if))))]
+	[(list (list for args in target if rest))
+	 (recurs (append out (list base)) `(,for ,args, in ,target ,if) rest)]
+	[(list first rest ..0)
+	 (recurs out (append base (list first)) rest)]))
+  (recurs '() '() lst))
+
+
 (define (recombine-comp lst)
   (define (recurs input lst1 lst2)
     (cond 

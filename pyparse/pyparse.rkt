@@ -140,6 +140,20 @@
   (recurs lst '() '()))
 
 
+(define (process-comp-for lst)
+  (define (recurs out base lst)
+      (match lst
+	['()
+	 (cdr (append out (list base)))]
+	[(list (list for args in target if))
+	 (cdr (append (append out (list base)) `((,for ,args, in ,target ,if))))]
+	[(list (list for args in target if rest))
+	 (recurs (append out (list base)) `(,for ,args, in ,target ,if) rest)]
+	[(list first rest ..0)
+	 (recurs out (append base (list first)) rest)]))
+  (recurs '() '() lst))
+
+
 (define (recombine-comp lst)
   (define (recurs input lst1 lst2)
     (cond 
@@ -2088,7 +2102,7 @@
         `(NameConstant ,(string->symbol $$)))))))
 
 (testlist_comp_for
- (($nt374 comp_for)
+ (($nt374 handle-this-bitch)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2349,7 +2363,7 @@
        (else `(Tuple ,@($ 1))))))))
 
 (dictorsetmaker
- ((test $:414 test comp_for)
+ ((test $:414 test handle-this-bitch)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2376,7 +2390,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1)))))
       (let (($ (λ (n) (list-ref ($ 1) n))) ($$ ($ 1)))
         `(Dict (keys ,@(car $$)) (values ,@(cadr $$)))))))
- ((test comp_for)
+ ((test handle-this-bitch)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -2479,6 +2493,20 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3)))))
       `(,(cadr ($ 1)) ,($ 3))))))
 
+(handle-this-bitch
+ ((comp_for)
+  (let-syntax (($
+                (λ (stx)
+                  (syntax-case stx ()
+                    ((_ n)
+                     (datum->syntax
+                      #'n
+                      (string->symbol
+                       (string-append
+                        "$"
+                        (number->string (syntax->datum #'n))))))))))
+    (let-syntax (($$ (λ (_) #'(list ($ 1))))) (process-comp-for ($ 1))))))
+
 (comp_iter
  ((comp_for)
   (let-syntax (($
@@ -2519,8 +2547,17 @@
                         (number->string (syntax->datum #'n))))))))))
     (let-syntax (($$ (λ (_) #'(list ($ 1) ($ 2) ($ 3) ($ 4) ($ 5)))))
       (if ($ 5)
-        `((for ,@($ 2) in ,($ 4) if ,@($ 5)))
-        `((for ,@($ 2) in ,($ 4) if)))))))
+        `((for
+           ,(if (equal? 1 (length ($ 2))) (car ($ 2)) `(Tuple ,@($ 2)))
+           in
+           ,($ 4)
+           if
+           ,($ 5)))
+        `((for
+           ,(if (equal? 1 (length ($ 2))) (car ($ 2)) `(Tuple ,@($ 2)))
+           in
+           ,($ 4)
+           if)))))))
 
 (comp_if
  (($if456 test_nocond $nt457)
@@ -3522,7 +3559,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
 ($nt471
- ((comp_for)
+ ((handle-this-bitch)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3576,7 +3613,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
 ($nt468
- ((comp_for)
+ ((handle-this-bitch)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3630,7 +3667,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
 ($nt465
- ((comp_for)
+ ((handle-this-bitch)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3684,7 +3721,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
 ($nt462
- ((comp_for)
+ ((handle-this-bitch)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
@@ -3886,7 +3923,7 @@
     (let-syntax (($$ (λ (_) #'(list ($ 1))))) "="))))
 
 ($nt451
- ((comp_for)
+ ((handle-this-bitch)
   (let-syntax (($
                 (λ (stx)
                   (syntax-case stx ()
