@@ -15,17 +15,17 @@
                                                          `((bases) (keywords) (starargs #f) (kwargs #f)))))
                    'NEWLINE
                    (if ($ 3)
-                       `(decorator_list (Call (func ,(process-dotted '() (reverse ($ 2)))) ,@($ 3)))
-                       `(decorator_list ,(process-dotted '() (reverse ($ 2)))))))
+                       `(Call (func ,(process-dotted '() (reverse ($ 2)))) ,@($ 3))
+                       (process-dotted '() (reverse ($ 2))))))
 
- (decorators (rep+ decorator))
+ (decorators ($*--> (rep+ decorator) `(decorator_list ,@($ 1))))
 
  (decorated (or ($*--> decorators 
                        classdef
-                       (replace ($ 2) (- (length ($ 2)) 2) (car ($ 1))))
+                       (replace ($ 2) (- (length ($ 2)) 2) ($ 1)))
                 ($*--> decorators 
                        funcdef
-                       (replace ($ 2) (- (length ($ 2)) 3) (car ($ 1))))))
+                       (replace ($ 2) (- (length ($ 2)) 3) ($ 1)))))
 
  (funcdef ($*--> "def" 
                  'NAME 
@@ -34,14 +34,14 @@
                  ":" 
                  suite
                  (if ($ 4)
-                     `(FunctionDef (name ,(string->symbol ($ 2))) (args ,($ 3)) (body ,@($ 6)) (decorator_list) (return ,($ 4)))
-                     `(FunctionDef (name ,(string->symbol ($ 2))) (args ,($ 3)) (body ,@($ 6)) (decorator_list) (return #f)))))
+                     `(FunctionDef (name ,(string->symbol ($ 2))) (args ,($ 3)) (body ,@($ 6)) (decorator_list) (returns ,($ 4)))
+                     `(FunctionDef (name ,(string->symbol ($ 2))) (args ,($ 3)) (body ,@($ 6)) (decorator_list) (returns #f)))))
 
  (parameters ($*--> "(" (opt typedargslist) ")" (if ($ 2) 
                                                     ($ 2) 
                                                     `(Arguments 
                                                       (args) 
-                                                      (args-types) 
+                                                      (arg-types) 
                                                       (vararg #f) 
                                                       (kwonlyargs) 
                                                       (kwonlyarg-types)
@@ -97,21 +97,21 @@
 
  (targ-kwonly-kwarg 
       ($*--> "*" 
-             tfpdef
+             ($*--> (opt tfpdef) (if ($ 1) (if (equal? (cadr ($ 1)) #f) `(,(car ($ 1))) ($ 1))  '(#f)))
              ($--> (rep tkwonly) (recombine-arglist $$))
-             (opt ($--> (seq "," "**" tfpdef) ($ 3)))
+             (opt ($--> (seq "," "**" ($*--> tfpdef (if (equal? (cadr ($ 1)) #f) `(,(car ($ 1))) ($ 1)))) ($ 3)))
 	     (if ($ 4)
 	      `( ()  
                  ()
-                 (,(car ($ 2))) 
+                 (,@($ 2))
                  (,@(car ($ 3)))  
                  (,@(caddr ($ 3))) 
                  (,@(cadr ($ 3))) 
-                 (,(car ($ 4)))  
+                 ,($ 4)
                  ())
 	      `( ()  
                  ()
-                 (,(car ($ 2)))   
+                 (,@($ 2))
                  (,@(car ($ 3)))  
                  (,@(caddr ($ 3))) 
                  (,@(cadr ($ 3))) 
@@ -150,10 +150,10 @@
 		     		        kwarg)) 
                                (if ($ 2)
                                    ($ 2)
-                                   `(() () () () () () () ()))))
+                                   `(() (#f) (#f) () () () (#f) ()))))
                    (if ($ 2)
                        `( (,@(car ($ 1))) 
-                          () 
+                          ,(flatten (make-list (length (car ($ 1))) #f))
                           ,(list-ref ($ 2) 2) 
                           ,(list-ref ($ 2) 3) 
                           ,(list-ref ($ 2) 4) 
@@ -161,7 +161,7 @@
                           ,(list-ref ($ 2) 6) 
                           (,@(cadr ($ 1))))
                        `( (,@(car ($ 1))) 
-                          (,($ 2)) 
+                          ,(flatten (make-list (length (car ($ 1))) #f))
                           (#f) 
                           () 
                           () 
@@ -182,12 +182,12 @@
 
  (arg-kwonly-kwarg 
       ($*--> "*" 
-             vfpdef
+             (opt vfpdef)
              ($--> (rep kwonly) (recombine-arglist $$))
              (opt ($--> (seq "," "**" vfpdef) ($ 3)))
 	     (if ($ 4)
-	      `( ()  ()  (,($ 2))   (,@(car ($ 3)))  (,@(caddr ($ 3)))  (,@(cadr ($ 3)))  (,($ 4))  ())
-	      `( ()  ()  (,($ 2))   (,@(car ($ 3)))  (,@(caddr ($ 3)))  (,@(cadr ($ 3)))  (#f)        ()))))
+	      `( ()  ()  (,(if ($ 2) ($ 2) #f))   (,@(car ($ 3)))  (,@(caddr ($ 3)))  (,@(cadr ($ 3)))  (,($ 4))  ())
+	      `( ()  ()  (,(if ($ 2) ($ 2) #f))   (,@(car ($ 3)))  (,@(caddr ($ 3)))  (,@(cadr ($ 3)))  (#f)        ()))))
 
  (kwonly ($*--> "," 
                 vfpdef 
@@ -217,7 +217,7 @@
  (expr_stmt (or ($*--> testlist_star_expr 
                        augassign 
                        (or yield_expr testlist) 
-                             `(AugAssign ,@($ 1) ,($ 2) ,($ 3)))
+                             `(AugAssign ,($ 1) ,($ 2) ,($ 3)))
                 ($*--> testlist_star_expr 
                        (rep+ ($*--> "=" 
                                    (or yield_expr 
@@ -227,7 +227,12 @@
                 ($*--> testlist_star_expr 
                        `(Expr ,($ 1)))))
 
- (testlist_star_expr ($--> (rep+/sep "," (or test star_expr) #t) (if (equal? 1 (length $$)) (car $$) `(Tuple ,@$$))))
+ (testlist_star_expr ($*--> (rep+/sep "," (or test star_expr) #f) 
+                            (opt ",")
+			    (cond
+			    [($ 2) `(Tuple ,@($ 1))]
+			    [(equal? 1 (length ($ 1))) (car ($ 1))]
+			    [else `(Tuple ,@($ 1))])))
 
  (augassign  (or ($--> "+=" 'Add)
                  ($--> "-=" 'Sub)
@@ -242,7 +247,7 @@
                  ($--> "**=" 'Pow)
                  ($--> "//=" 'FloorDiv)))
 
- (del_stmt ($*--> "del" exprlist `(Delete ,($ 2))))
+ (del_stmt ($*--> "del" exprlist `(Delete ,@($ 2))))
 
  (pass_stmt ($--> "pass" '(Pass)))
  
@@ -258,7 +263,7 @@
                        `(Return ,($ 2))
                         '(Return))))
 
- (yield_stmt yield_expr)
+ (yield_stmt ($*--> yield_expr `(Expr ,($ 1))))
 
  (raise_stmt ($*--> "raise" 
                     (opt ($*--> test 
@@ -312,24 +317,24 @@
 
  (global_stmt ($*--> "global" 
                      (rep+/sep "," 'NAME #f)
-                     `(Global ,(map string->symbol ($ 2)))))
+                     `(Global ,@(map string->symbol ($ 2)))))
 
  (nonlocal_stmt ($*--> "nonlocal" 
                        (rep+/sep "," 'NAME #f)
-                       `(Nonlocal ,(map string->symbol ($ 2)))))
+                       `(Nonlocal ,@(map string->symbol ($ 2)))))
 
  (assert_stmt ($*--> "assert"  
                      (rep+/sep "," test #f)
                      `(Assert ,@($ 2))))
 
- (compound_stmt (or if_stmt
-                    while_stmt
-                    for_stmt
-                    try_stmt
-                    with_stmt
-                    funcdef
-                    classdef
-                    decorated))
+ (compound_stmt ($*--> (or if_stmt
+                           while_stmt
+                           for_stmt
+                           try_stmt
+                           with_stmt
+                           funcdef
+                           classdef
+                           decorated) `(,($ 1))))
 
  (if_stmt ($--> (or ($*--> "if"
                            test
@@ -346,8 +351,8 @@
                            (rep+ ($*--> "elif" test ":" suite `(,($ 2) ,($ 4))))
                            (opt ($*--> "else" ":" suite ($ 3)))
                            (if ($ 6)
-                               `(,($ 2) ,@($ 4) ,@(process-if ($ 6) ($ 5)))
-                               `(,($ 2) ,@($ 4) ,@(process-if '() ($ 5)))))
+                               `(,($ 2) ,@($ 4) ,@(process-if ($ 6) (reverse ($ 5))))
+                               `(,($ 2) ,@($ 4) ,@(process-if '() (reverse ($ 5))))))
                     ($*--> "if"
                            test
                            ":"
@@ -374,7 +379,7 @@
                                 (orelse)))))
 
  (for_stmt ($*--> "for" 
-                  exprlist 
+                  ($*--> exprlist (if (equal? (length ($ 1)) 1) ($ 1) `((Tuple ,@($ 1)))))
                   "in" 
                   testlist
                   ":" 
@@ -415,7 +420,7 @@
                         (orelse ,@(cadr ($ 4)))
                         (finalbody ,@(caddr ($ 4))))))
 
- (with_stmt ($*--> "with" (rep+/sep "," with_item #f) ":" suite `(With ,@($ 2) ,($ 4))))
+ (with_stmt ($*--> "with" (rep+/sep "," with_item #f) ":" suite `(With ,($ 2) ,@($ 4))))
 
  (with_item ($*--> test 
                    (opt ($*--> "as" expr ($ 2)))
@@ -433,8 +438,8 @@
                         ($ 2)   
                         `(#f #f))))
 
- (suite (or simple_stmt  
-            ($*--> 'NEWLINE 'INDENT (rep+ stmt) 'DEDENT ($ 3))))
+ (suite (or simple_stmt
+            ($*--> 'NEWLINE 'INDENT (rep+ ($*--> stmt (car ($ 1)))) 'DEDENT ($ 3))))
  
  (test (or ($*--> or_test (opt ($*--> "if" or_test "else" test `(,($ 2) ,($ 4))))
 								(if ($ 2)
@@ -442,14 +447,33 @@
 								 ($ 1)))
             lambdef))
  (test_nocond (or or_test lambdef_nocond))
- (lambdef ($*--> "lambda" (opt varargslist) ":" test
-												(if ($ 4)
-												 `(Lambda ,($ 2) ,($ 4))
-													`(Lambda ,($ 3)))))
+ (lambdef ($*--> "lambda" 
+                 (opt varargslist) 
+                 ":"  
+                 test
+		(if ($ 2)
+		 `(Lambda ,($ 2) ,($ 4))
+		 `(Lambda (Arguments (args) 
+				     (arg-types)
+				     (vararg #f)
+				     (kwonlyargs)
+				     (kwonlyarg-types)
+				     (kw_defaults)
+				     (kwarg #f)
+				     (defaults))
+				     ,($ 4)))))
  (lambdef_nocond ($*--> "lambda" (opt varargslist) ":" test_nocond
-			(if ($ 4)
+			(if ($ 2)
 			 `(Lambda ,($ 2) ,($ 4))
-				`(Lambda ,($ 3)))))
+			 `(Lambda (Arguments (args) 
+                                             (arg-types)
+                                             (vararg #f)
+                                             (kwonlyargs)
+                                             (kwonlyarg-types)
+                                             (kw_defaults)
+                                             (kwarg #f)
+                                             (defaults))
+                                             ,($ 4)))))
 
  (or_test (or ($--> (seq or_test "or" and_test) `(BoolOp Or ,($ 1) ,($ 3)))
                  and_test))
@@ -460,7 +484,11 @@
  (not_test (or ($--> (seq "not" not_test) `(UnaryOp Not ,($ 2)))
                comparison))
 
- (comparison (or ($--> (seq comparison comp_op expr) `(Compare (left ,($ 1)) ,($ 2) (comparators ,($ 3))))
+ (comparison (or ($*--> expr 
+                        (rep+ ($*--> comp_op expr `(,($ 1) ,($ 2)))) 
+                        `(Compare (left ,($ 1)) (ops ,@(car (recombine-comp ($ 2)))) (comparators ,@(cadr (recombine-comp ($ 2))))))
+                 expr))
+ #;(comparison (or ($--> (seq comparison comp_op expr) `(Compare (left ,($ 1)) ,($ 2) (comparators ,($ 3))))
                  expr))
 
  (comp_op ($--> (or ($--> "<" 'Lt)
@@ -511,34 +539,44 @@
                        `(BinOp ,(process-trailers ($ 1) ($ 2)) Pow, ($ 3))
                        (process-trailers ($ 1) ($ 2)))))
  (atom
-  (or ($*--> "(" (or yield_expr testlist_comp) ")" ($ 2))
+  (or ($*--> "(" yield_expr ")" ($ 2))
+      ($*--> "(" testlist_comp ")" (if (equal? 1 (length ($ 2))) (car ($ 2)) `(Tuple ,@($ 2))))
+      ($*--> "(" testlist_comp_trail ")" `(Tuple ,($ 2)))
+      ($*--> "(" testlist_comp_for ")" `(GeneratorExp ,@($ 2)))
       ($*--> "(" ")" '(Tuple))
-      ($*--> "[" testlist_comp "]" `(Tuple ,($ 2)))
+      ($*--> "[" testlist_comp "]" `(List ,@($ 2)))
+      ($*--> "[" testlist_comp_for "]" `(ListComp ,@($ 2)))
       ($*--> "[" "]" '(List))
       ($*--> "{" dictorsetmaker "}" ($ 2))
       ($*--> "{" "}" `(Dict (keys) (values)))
       ($--> (seq 'NAME) `(Name ,(string->symbol ($ 1))))
       ($--> 'NUMBER `(Num ,$$))
-      ($--> (seq (rep+ 'STRING)) `(Str ,(apply string-append ($ 1))))
+      ($*--> (rep+ 'STRING) (process-string ($ 1)))
       ($--> "..." '(Ellipsis))
       ($--> "None" `(NameConstant ,(string->symbol $$)))
       ($--> "True" `(NameConstant ,(string->symbol $$)))
       ($--> "False" `(NameConstant ,(string->symbol $$)))))
 
- (testlist_comp
-  (or ($*--> (or test star_expr) comp_for `(GeneratorExp ,($ 1) ,($ 2)))
-      ($*--> (rep+/sep "," (or test star_expr) #t) 
-             (if (equal? 1 (length ($ 1))) `(GeneratorExp ,@($ 1)) `(Tuple ,@($ 1))))))
+ (testlist_comp_for ($*--> (or test star_expr) comp_for `(,($ 1) ,@($ 2))))
+ (testlist_comp  ($*--> (rep+/sep "," (or test star_expr) #f) 
+                        (opt ",")
+             (if (equal? 1 (length ($ 1))) `( ,@($ 1)) ($ 1))))
+ (testlist_comp_trail  ($*--> (or test star_expr) 
+                              ","  
+                              ($ 1)))
+                              
  (trailer
-  (or ($*--> "(" arglist ")" ($ 2)) 
-      ($*--> "(" ")" `((args ) (keywords ) (starargs #f) (kwargs #f)))
-      ($*--> "[" subscriptlist "]" `(Index ,($ 2)))
-      ($*--> "." 'NAME `(,(string->symbol ($ 2))))))
+  (or ($*--> "(" arglist ")" `(Call ,@($ 2)))
+      ($*--> "(" ")" `(Call (args ) (keywords ) (starargs #f) (kwargs #f)))
+      ($*--> "[" subscriptlist "]"  `(Subscript ,($ 2)))
+      ($*--> "." 'NAME `(Attribute ,(string->symbol ($ 2))))))
 
  (subscriptlist (or ($*--> subscript ($ 1))
-                    ($--> (rep+/sep "," subscript #t) `(Tuple ,@$$))))
+                    ($*--> (rep+/sep "," index #t) `(Index (Tuple ,@($ 1))))
+                    ($*--> (rep+/sep "," subscript #t) `(ExtSlice ,@($ 1)))))
 
- (subscript (or test
+ (index ($*--> test ($ 1)))
+ (subscript (or ($*--> test `(Index ,($ 1)))
                 ($*--> test ":" test (opt sliceop) (if ($ 4) `(Slice ,($ 1) ,($ 3) ,($ 4))  `(Slice ,($ 1) ,($ 3) #f)))
                 ($*--> test ":" (opt sliceop)      (if ($ 3) `(Slice ,($ 1) #f ,($ 3))      `(Slice ,($ 1) #f #f)))
                 ($*--> ":" test (opt sliceop)      (if ($ 3) `(Slice #f ,($ 2) ,($ 3))      `(Slice #f ,($ 2) #f )))
@@ -556,9 +594,15 @@
          (opt ",")  
           (if (empty? ($ 2))
          `( ,($ 1) )
-          `(,($ 1) ,($ 2)))))
+          `(,($ 1) ,@($ 2)))))
 
- (testlist ($*--> test 
+ (testlist ($*--> (rep+/sep "," test #f) 
+                  (opt ",") 
+                  (cond
+                    [($ 2) `(Tuple ,@($ 1))]
+                    [(equal? 1 (length ($ 1))) (car ($ 1))]
+                    [else `(Tuple ,@($ 1))])))
+ #;(testlist ($*--> test 
                   ($--> (rep ($*--> "," test ($ 2))) $$)
                   (opt ",")
 		  (if (empty? ($ 2))
@@ -570,9 +614,11 @@
              ":"
              test
              comp_for
-             `(DictComp ,($ 1) ,($ 3) ,($ 4)))
-      ($--> ($*--> (rep+/sep "," ($*--> test ":" test `(,($ 1) ,($ 3))) #t) (recombine (car $$))) `(Dict (keys ,@(car $$)) (values ,(cadr $$))))
-      ($*--> test comp_for `(SetComp ,($ 1) ,($ 2)))
+             `(DictComp ,($ 1) ,($ 3) ,@($ 4)))
+      ($--> ($*--> (rep+/sep "," ($*--> test ":" test `(,($ 1) ,($ 3))) #t) 
+                   (recombine (car $$)))
+            `(Dict (keys ,@(car $$)) (values ,@(cadr $$))))
+      ($*--> test comp_for `(SetComp ,($ 1) ,@($ 2)))
       ($--> (rep+/sep "," test #t) `(Set ,@$$))))
 
  (classdef ($*--> "class" 
@@ -582,22 +628,61 @@
                                                         `((bases) (keywords) (starargs #f) (kwargs #f)))))
                   ":"
                   suite (if ($ 3)
-			 `(ClassDef (name ,(string->symbol ($ 2))) ,@($ 3) (body ,@($ 5)) (decorator_list))
+			 `(ClassDef (name ,(string->symbol ($ 2))) (bases ,@(cdar ($ 3))) ,@(cdr ($ 3)) (body ,@($ 5)) (decorator_list))
 			 `(ClassDef (name ,(string->symbol ($ 2))) (bases) (keywords) (starargs #f) (kwargs #f) (body ,@($ 5)) (decorator_list)))))
 
- (arglist ($--> ($*--> ($--> (rep ($*--> argument "," ($ 1))) $$) 
-                       (or ($*--> argument (opt ",") `(() (,($ 1)) () ))
-                           ($*--> "*" 
-                                 test 
-                                 ($--> (rep ($*--> "," argument ($ 2))) $$)
-                                 (opt ($*--> "," "**" test ($ 3)))
-                                 (if ($ 4)
-                                  `(,($ 2) ,($ 3) ,($ 4))
-                                  `(,($ 2) ,($ 3) ())))
-                          ($*--> "**" test `(() () ,($ 2))))
-                       (coalesce ($ 2) ($ 1)))
-
-			   `(,`(args             ,($ 0)) 
+ (arglist ($--> (or ($--> (rep+/sep "," (or ($*--> test 
+                                                   (opt comp_for)
+                                                   (if ($ 2)
+                                                    `("a" (GeneratorExp ,($ 1) ,($ 2)))
+                                                    `("a" ,($ 1))))
+                                            ($*--> test 
+                                                   "=" 
+                                                   test
+                                                   `("k" (,(cadr ($ 1)) ,($ 3)))))
+                                    #t)
+                           `( ,@(process-args-list $$) (#f) (#f) ))
+                    ($*--> (rep/sep "," (or ($*--> test 
+                                                   (opt comp_for)
+                                                   (if ($ 2)
+                                                    `("a" (GeneratorExp ,($ 1) ,($ 2)))
+                                                    `("a" ,($ 1))))
+                                            ($*--> test 
+                                                   "=" 
+                                                   test
+                                                   `("k" (,(cadr ($ 1)) ,($ 3))))) 
+                                         #f)
+                           (or ($*--> "," "*" test ($ 3))
+                               ($*--> "*" test ($ 2)))
+                           (opt ($*--> "," (rep+/sep "," (or ($*--> test 
+                                                   (opt comp_for)
+                                                   (if ($ 2)
+                                                    `("a" (GeneratorExp ,($ 1) ,($ 2)))
+                                                    `("a" ,($ 1))))
+                                            ($*--> test 
+                                                   "=" 
+                                                   test
+                                                   `("k" (,(cadr ($ 1)) ,($ 3))))) 
+                                         #f) 
+                                       ($ 2)))
+                           (opt ($*--> "," "**" test ($ 3))) 
+                           `(,@(process-args-list (append ($ 1) (if ($ 3) ($ 3) '())))
+                             (,($ 2))
+                             ,(if ($ 4) `(,($ 4)) '(#f))))
+                    ($*--> (rep/sep "," (or ($*--> test 
+                                                   (opt comp_for)
+                                                   (if ($ 2)
+                                                    `("a" (GeneratorExp ,($ 1) ,($ 2)))
+                                                    `("a" ,($ 1))))
+                                            ($*--> test
+                                                   "=" 
+                                                   test
+                                                   `("k" (,(cadr ($ 1)) ,($ 3))))) 
+                                         #f)
+                           ( or ($*--> "," "**" test ($ 3))
+                                ($*--> "**" test ($ 2)))
+                           `(,@(process-args-list ($ 1)) (#f) (,($ 2)))))
+			   `(,`(args             ,@($ 0)) 
 			     ,`(keywords         ,@($ 1)) 
 			     ,`(starargs         ,@($ 2)) 
 			     ,`(kwargs           ,@($ 3)))))
@@ -606,7 +691,7 @@
                       (opt comp_for)
                       (if ($ 2)
                        `(GeneratorExp ,($ 1) ,($ 2))
-                       `( ,($ 1))))
+                       ($ 1)))
                ($*--> test 
                       "=" 
                       test
@@ -616,16 +701,17 @@
 
  (comp_for ($*--> "for" exprlist "in" or_test (opt comp_iter)
 					(if ($ 5)
-					 `(for ,@($ 2) in ,($ 4) if ,@($ 5))
-					 `(for ,@($ 2) in ,($ 4) if))))
+					 `((for ,@($ 2) in ,($ 4) if ,@($ 5)))
+					 `((for ,@($ 2) in ,($ 4) if)))))
  (comp_if ($*--> "if" test_nocond (opt comp_iter)
 					(if ($ 3)
 					 `(,($ 2) ,@($ 3))
 					 `(,($ 2)))))
  (encoding_decl 'NAME)
  (yield_expr ($*--> "yield" 
-                    (opt yield_arg) (if ($ 2)
+                    (opt yield_arg)  
+                    (if ($ 2)
                     ($ 2)
                     '(Yield))))
  (yield_arg (or ($*--> "from" test `(YieldFrom ,($ 2)))
-                ($--> testlist `(Yield ,($ 1))))))
+                ($*--> testlist `(Yield ,($ 1))))))

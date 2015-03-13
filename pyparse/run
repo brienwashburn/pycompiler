@@ -3,8 +3,6 @@ if [ $1 = "-f" ]; then
     racket ../../python-compiler/pylex.zo < $2 | ./pyparse
 elif [ $1 = "-fe" ]; then
     racket ../../python-compiler/pylex.zo < $2 | grep -v ENDMARKER |  ./pyparse
-elif [ $1 = "-fef" ]; then
-    racket ../../python-compiler/pylex.zo --exp < $2 |  ./pyparse
 else
     echo $@ | racket ../../python-compiler/pylex.zo --exp | ./pyparse
 fi

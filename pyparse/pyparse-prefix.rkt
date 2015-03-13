@@ -40,12 +40,22 @@
 (define (process-trailers base ops)
   (match ops 
     ['() base]
-    [(cons (list args kw str kwarg)  rest)
-     (process-trailers `(Call (func  ,base) ,args ,kw ,str ,kwarg) rest)]
-    [(cons (list name) rest )
-      (process-trailers `(Attribute ,base ,name) rest) ]
-    [(cons (list ind name) rest )
-      (process-trailers `(Subscript ,base (,ind ,name)) rest) ]))
+    [(cons (list call one two three four) rest)
+      (process-trailers `(,call (func ,base) ,one ,two ,three ,four) rest) ]
+    [(cons (list op exp) rest)
+      (process-trailers `(,op ,base ,exp) rest) ]))
+
+
+(define (process-args-list lst)
+  (define (recurs lst arg keyword)
+    (cond
+      [(empty? lst) (list arg keyword)]
+      [(equal? "a" (caar lst)) 
+       (recurs (cdr lst) (append arg (cdar lst)) keyword)]
+      [else 
+       (recurs (cdr lst) arg (append keyword (cdar lst)))]))
+  (recurs lst '() '()))
+
 
 (define (process-dotted base ops)
   (match ops 
@@ -110,11 +120,31 @@
    [(empty? second) (list first '())]
    [else `( (,first ,@(take second (- (length second) 1))) ,(last second))]))
 
+
+(define (process-string lst)
+  (define (recurs lst currstr strs)
+     (cond
+       [(empty? lst) (if (equal? currstr "") strs (append strs `(Str ,currstr)))]
+       [(bytes? (car lst)) (recurs (cdr lst) "" 
+                                   (append (if (equal? currstr "") 
+                                       strs 
+                                       (append strs `(Str ,currstr))) `(Bytes ,(car lst))))]
+       [else (recurs (cdr lst) (string-append currstr (car lst)) strs)]))
+  (recurs lst "" '()))
+
 (define (recombine lst)
   (define (recurs input lst1 lst2)
     (cond 
      [(empty? input) (list lst1 lst2)]
-     [else (recurs (cdr input) (append lst1 (list (caar input))) (append lst2 (cadar input)))]))
+     [else (recurs (cdr input) (append lst1 (list (caar input))) (append lst2 (list (cadar input))))]))
+  (recurs lst '() '()))
+
+
+(define (recombine-comp lst)
+  (define (recurs input lst1 lst2)
+    (cond 
+     [(empty? input) (list lst1 lst2)]
+     [else (recurs (cdr input) (append lst1 (list (cadaar input))) (append lst2 (list (cadar input))))]))
   (recurs lst '() '()))
 ;; You may want to put definitions here rather than defining
 ;; them in the grammar itself.
@@ -133,6 +163,7 @@
    ; the start symbol is set to `power` instead of `file_input`.
    ; You should change the start symbol as you move up the kinds
    ; of expressions.
+   ;(start comparison)
    (start file_input)
    
    (error (λ (tok-ok? tok-name tok-value)
