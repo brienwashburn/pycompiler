@@ -1,0 +1,71 @@
+(Module
+ (Assign (targets (Name a)) (value (Name b)))
+ (Assign (targets (Tuple (Name a) (Name b))) (value (Name c)))
+ (Assign (targets (Tuple (Name a))) (value (Name c)))
+ (Assign (targets (Tuple (Name a) (Name b))) (value (Name c)))
+ (Assign (targets (Name a)) (value (Yield)))
+ (Assign (targets (Name a)) (value (YieldFrom (Name baz))))
+ (Assign (targets (Tuple (Name a) (Name b) (Name c))) (value (Yield)))
+ (Assign
+  (targets (Tuple (Name a) (Name b) (Name c)))
+  (value (YieldFrom (Name baz))))
+ (Assign
+  (targets (Name a))
+  (value
+   (Call
+    (func (Name foo))
+    (args (BinOp (BinOp (Num 10) Mult (Name f)) Add (Num 22)))
+    (keywords)
+    (starargs #f)
+    (kwargs #f))))
+ (Assign
+  (targets (Tuple (Name a) (Name b) (Starred (Name c))))
+  (value (List (Num 1) (Num 2) (Num 3) (Num 4) (Num 5))))
+ (Assign
+  (targets
+   (Tuple
+    (Starred (Name a))
+    (Starred (Name b))
+    (Starred (Name foo))
+    (Starred (Name x))))
+  (value (Num 12)))
+ (Assign (targets (Starred (Name _))) (value (Num 12)))
+ (Assign (targets (Name a) (Name b)) (value (Num 3)))
+ (Assign
+  (targets (Name a) (Starred (Name b)) (Name c))
+  (value (BinOp (Num 3) Mult (Name x))))
+ (Assign
+  (targets
+   (Name a)
+   (Starred (Name b))
+   (Name c)
+   (Name d)
+   (Starred (Name f))
+   (Name e))
+  (value (Num 10)))
+ (Assign
+  (targets (Starred (Name a)) (Name b))
+  (value
+   (Subscript
+    (Call
+     (func (Name foo))
+     (args (Num 3))
+     (keywords)
+     (starargs #f)
+     (kwargs #f))
+    (Index (Num 21)))))
+ (Assign
+  (targets (Tuple (Name a) (Name b)) (Starred (Name c)) (Name d))
+  (value (Num 3)))
+ (Assign
+  (targets
+   (Starred (Name c))
+   (Tuple (Name a) (Name b))
+   (Tuple (Name c) (Name d) (Name e)))
+  (value (Num 10)))
+ (Assign
+  (targets (Name a))
+  (value (Tuple (BoolOp Or (Name b) (Name c)) (BoolOp Or (Name d) (Name e)))))
+ (Assign
+  (targets (Tuple (Name a) (Name b)) (Name c) (Name d))
+  (value (Tuple (BoolOp Or (Name e) (Name f)) (BoolOp Or (Name g) (Name h))))))
