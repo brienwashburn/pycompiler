@@ -1,0 +1,6 @@
+#!/bin/bash 
+if [ $1 = "-f" ]; then
+    racket ../python-compiler/pylex.zo < $2 | racket ../python-compiler/pyparse.zo | ./pydesugar1
+else
+    echo $@ | racket ../python-compiler/pylex.zo | racket ../python-compiler/pyparse.zo | ./pydesugar1
+fi
