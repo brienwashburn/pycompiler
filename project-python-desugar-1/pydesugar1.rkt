@@ -21,7 +21,7 @@
   ; <local definitions go here>
   
   ; A helper:
-  (define (strip-defaults! arguments)
+  #;(define (strip-defaults! arguments)
     (match arguments
       [`(Arguments
          (args . ,ids)
@@ -32,8 +32,17 @@
          (kw_defaults . ,kw_defaults)
          (kwarg ,kwarg . ,kwarg-type)
          (defaults . ,defaults))
-       ;=>
-       (error "put something here!")]))
+
+      `(Arguments
+         (args . ,ids)
+         (arg-types . ,arg-types)
+         (vararg ,vararg . ,vararg-type) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,kwonlyarg-types)
+         (kw_defaults . ,kw_defaults)
+         (kwarg ,kwarg . ,kwarg-type)
+         (defaults . ,defaults))
+        ]))
   
        
   (match stmt
@@ -44,8 +53,15 @@
        (body . ,body)
        (decorator_list . ,decorators)
        (returns ,returns))
-     
-     (error "reconstitute the function def")]
+
+
+     `(FunctionDef 
+       (name ,id)
+       (args ,args)
+       (body . ,body)
+       (decorator_list . ,decorators)
+       (returns ,returns))
+     a
      
     [else (list stmt)]))
 
@@ -94,8 +110,27 @@
        (body . ,body)
        (decorator_list . ,decorators)
        (returns ,returns))
+
+
      
-     (error "finish me")]
+      `((FunctionDef 
+        (name ,id)
+        (args ,args)
+        (body . ,body)
+        (decorator_list)
+        (returns ,returns))
+        ,@(map (lambda (x) 
+           `(Assign
+	    (targets 
+	      (Name ,id))
+	     (value 
+              (Call
+               (func ,x)
+               (args (Name ,id))
+               (keywords)
+               (starargs #f)
+               (kwargs #f))))) decorators))
+]
      
      [`(ClassDef
         (name ,id)
@@ -106,9 +141,29 @@
         (body . ,body)
         (decorator_list . ,decorators))
       
-      (error "finish me")]
+      `((ClassDef
+        (name ,id)
+        (bases . ,bases)
+        (keywords . ,keywords)
+        (starargs ,starargs)
+        (kwargs ,kwargs)
+        (body . ,body)
+        (decorator_list . ,decorators))
+        ,@(map (lambda (x) 
+           `(Assign
+	    (targets 
+	      (Name ,id))
+	     (value 
+              (Call
+               (func ,x)
+               (args (Name ,id))
+               (keywords)
+               (starargs #f)
+               (kwargs #f))))) decorators))
+]
 
     [else     (list stmt)]))
+
     
     
     
@@ -245,9 +300,9 @@
 
 ;; Uncomment each of these as you finish them:
 
-;(set! prog (walk-module prog #:transform-stmt lift-decorators))
+(set! prog (walk-module prog #:transform-stmt lift-decorators))
 
-;(set! prog (walk-module prog #:transform-stmt lift-defaults))
+(set! prog (walk-module prog #:transform-stmt lift-defaults))
 
 ;(set! prog (walk-module prog #:transform-stmt lift-annotations))
 
