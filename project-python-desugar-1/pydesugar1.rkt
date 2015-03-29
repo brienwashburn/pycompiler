@@ -16,53 +16,123 @@
   
 
 ;;; Lift defaults
-;(define (lift-defaults stmt)
-;  
-;  ; <local definitions go here>
-;  
-;  ; A helper:
-;  (define (strip-defaults! arguments)
-;    (match arguments
-;      [`(Arguments
-;         (args . ,ids)
-;         (arg-types . ,arg-types)
-;         (vararg ,vararg . ,vararg-type) 
-;         (kwonlyargs . ,kwonlyargs) 
-;         (kwonlyarg-types . ,kwonlyarg-types)
-;         (kw_defaults . ,kw_defaults)
-;         (kwarg ,kwarg . ,kwarg-type)
-;         (defaults . ,defaults))
-;
-;      `(Arguments
-;         (args . ,ids)
-;         (arg-types . ,arg-types)
-;         (vararg ,vararg . ,vararg-type) 
-;         (kwonlyargs . ,kwonlyargs) 
-;         (kwonlyarg-types . ,kwonlyarg-types)
-;         (kw_defaults . ,kw_defaults)
-;         (kwarg ,kwarg . ,kwarg-type)
-;         (defaults . ,defaults))
-;        ]))
-;  
-;       
-;  (match stmt
-;    
-;    [`(FunctionDef 
-;       (name ,id)
-;       (args ,args)
-;       (body . ,body)
-;       (decorator_list . ,decorators)
-;       (returns ,returns))
-;
-;
-;     `(FunctionDef 
-;       (name ,id)
-;       (args ,args)
-;       (body . ,body)
-;       (decorator_list . ,decorators)
-;       (returns ,returns))
-;     
-;    [else (list stmt)]))
+(define (lift-defaults stmt)
+  
+  ; <local definitions go here>
+  
+  ; A helper:
+  (define (strip-defaults! arguments)
+    (match arguments
+      [`(Arguments
+         (args . ,ids)
+         (arg-types . ,arg-types)
+         (vararg ,vararg . ,vararg-type) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,kwonlyarg-types)
+         (kw_defaults . ,kw_defaults)
+         (kwarg ,kwarg . ,kwarg-type)
+         (defaults . ,defaults))
+
+      `((Arguments
+         (args . ,ids)
+         (arg-types . ,arg-types)
+         (vararg ,vararg . ,vararg-type) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,kwonlyarg-types)
+         (kw_defaults . ,(if (empty? kwonlyargs) '() '(#f)))
+         (kwarg ,kwarg . ,kwarg-type)
+         (defaults . ,(if (empty? ids) '() '(#f)))))
+        ]))
+
+  (define (args-empty? arguments)
+    (match arguments
+      [`(Arguments
+         (args . ,ids)
+         (arg-types . ,arg-types)
+         (vararg ,vararg . ,vararg-type) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,kwonlyarg-types)
+         (kw_defaults . ,kw_defaults)
+         (kwarg ,kwarg . ,kwarg-type)
+         (defaults . ,defaults))
+       
+       (empty? ids)]))
+
+  (define (get-defaults arguments)
+    (match arguments
+      [`(Arguments
+         (args . ,ids)
+         (arg-types . ,arg-types)
+         (vararg ,vararg . ,vararg-type) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,kwonlyarg-types)
+         (kw_defaults . ,kw_defaults)
+         (kwarg ,kwarg . ,kwarg-type)
+         (defaults . ,defaults))
+       
+       defaults]))
+
+  (define (kwonly-empty? arguments)
+    (match arguments
+      [`(Arguments
+         (args . ,ids)
+         (arg-types . ,arg-types)
+         (vararg ,vararg . ,vararg-type) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,kwonlyarg-types)
+         (kw_defaults . ,kw_defaults)
+         (kwarg ,kwarg . ,kwarg-type)
+         (defaults . ,defaults))
+       
+       (empty? kwonlyargs)]))
+
+  (define (get-kwdefaults arguments)
+    (match arguments
+      [`(Arguments
+         (args . ,ids)
+         (arg-types . ,arg-types)
+         (vararg ,vararg . ,vararg-type) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,kwonlyarg-types)
+         (kw_defaults . ,kw_defaults)
+         (kwarg ,kwarg . ,kwarg-type)
+         (defaults . ,defaults))
+       
+       kw_defaults]))
+  
+       
+  (match stmt
+    
+    [`(FunctionDef 
+       (name ,id)
+       (args ,args)
+       (body . ,body)
+       (decorator_list . ,decorators)
+       (returns ,returns))
+
+     `((FunctionDef 
+       (name ,id)
+       (args ,@(strip-defaults! args))
+       (body . ,body)
+       (decorator_list . ,decorators)
+       (returns ,returns)) 
+         (Assign
+            (targets 
+              (Attribute
+                 (Name ,id) __defaults__))
+             (value ,(if (args-empty? args) '(NameConstant None) `(Tuple ,@(get-defaults args)))))
+         (Assign
+            (targets 
+              (Attribute
+                 (Name ,id) __kwdefaults__))
+             (value ,(if (kwonly-empty? args) '(NameConstant None) `(Tuple ,@(get-kwdefaults args))))))]
+
+
+     [else (list stmt)]))
+
+
+
+
 
 
 
@@ -74,6 +144,44 @@
 (define (lift-annotations stmt)
 
   ; <similar local definitions as lift-defaults>
+  (define (extract-args args arg-types)
+    (define keys '())
+    (for/list ([i arg-types] [j args])
+      (if (equal? i #f)
+          (void)
+            (set! keys (append keys `(,j)))))
+     keys)
+
+  (define (extract-argtypes args arg-types)
+    (define keys '())
+    (for/list ([i arg-types] [j args])
+      (if (equal? i #f)
+          (void)
+          (set! keys (append keys `(,i)))))
+     keys)
+
+  (define (get-types arguments)
+    (match arguments
+      [`(Arguments
+         (args . ,ids)
+         (arg-types . ,arg-types)
+         (vararg ,vararg . ,vararg-type) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,kwonlyarg-types)
+         (kw_defaults . ,kw_defaults)
+         (kwarg ,kwarg . ,kwarg-type)
+         (defaults . ,defaults))
+       
+       `((,@(if (equal? vararg-type #f) '() `(,vararg))
+          ,@(if (equal? kwarg-type #f) '() `(,kwarg))
+          ,@(extract-args kwonlyargs kwonlyarg-types)
+          ,@(extract-args ids arg-types))
+         (,@(if (equal? vararg-type #f) '() vararg-type)
+          ,@(if (equal? kwarg-type #f) '() kwarg-type)
+          ,@(extract-argtypes kwonlyargs kwonlyarg-types)
+          ,@(extract-argtypes ids arg-types)))]))
+
+       
   
   (match stmt
     [`(FunctionDef 
@@ -82,12 +190,28 @@
        (body . ,body)
        (decorator_list . ,decorators)
        (returns ,returns))
+
+     `((FunctionDef 
+       (name ,id)
+       (args ,args)
+       (body . ,body)
+       (decorator_list . ,decorators)
+       (returns ,returns))
+       (Assign
+         (targets
+          (Attribute
+           (Name ,id) __annotations__))
+         (value 
+           (Dict
+             (keys ,@(if (empty? returns) '() `((Str "return")))
+                   ,@(map (lambda (x)  `(Str ,(symbol->string x))) (car (get-types args))))
+             (values ,returns
+                     ,@(cadr (get-types args)))))))]
      
-     (error "reconstitute the FunctionDef")]
+     
     
     [else (list stmt)]))
 
-       
        
     
     
@@ -301,9 +425,9 @@
 
 (set! prog (walk-module prog #:transform-stmt lift-decorators))
 
-;(set! prog (walk-module prog #:transform-stmt lift-defaults))
+(set! prog (walk-module prog #:transform-stmt lift-defaults))
 
-;(set! prog (walk-module prog #:transform-stmt lift-annotations))
+(set! prog (walk-module prog #:transform-stmt lift-annotations))
 
 ;(set! prog (walk-module prog #:transform-stmt eliminate-for))
 
