@@ -16,54 +16,53 @@
   
 
 ;;; Lift defaults
-(define (lift-defaults stmt)
-  
-  ; <local definitions go here>
-  
-  ; A helper:
-  #;(define (strip-defaults! arguments)
-    (match arguments
-      [`(Arguments
-         (args . ,ids)
-         (arg-types . ,arg-types)
-         (vararg ,vararg . ,vararg-type) 
-         (kwonlyargs . ,kwonlyargs) 
-         (kwonlyarg-types . ,kwonlyarg-types)
-         (kw_defaults . ,kw_defaults)
-         (kwarg ,kwarg . ,kwarg-type)
-         (defaults . ,defaults))
-
-      `(Arguments
-         (args . ,ids)
-         (arg-types . ,arg-types)
-         (vararg ,vararg . ,vararg-type) 
-         (kwonlyargs . ,kwonlyargs) 
-         (kwonlyarg-types . ,kwonlyarg-types)
-         (kw_defaults . ,kw_defaults)
-         (kwarg ,kwarg . ,kwarg-type)
-         (defaults . ,defaults))
-        ]))
-  
-       
-  (match stmt
-    
-    [`(FunctionDef 
-       (name ,id)
-       (args ,args)
-       (body . ,body)
-       (decorator_list . ,decorators)
-       (returns ,returns))
-
-
-     `(FunctionDef 
-       (name ,id)
-       (args ,args)
-       (body . ,body)
-       (decorator_list . ,decorators)
-       (returns ,returns))
-     a
-     
-    [else (list stmt)]))
+;(define (lift-defaults stmt)
+;  
+;  ; <local definitions go here>
+;  
+;  ; A helper:
+;  (define (strip-defaults! arguments)
+;    (match arguments
+;      [`(Arguments
+;         (args . ,ids)
+;         (arg-types . ,arg-types)
+;         (vararg ,vararg . ,vararg-type) 
+;         (kwonlyargs . ,kwonlyargs) 
+;         (kwonlyarg-types . ,kwonlyarg-types)
+;         (kw_defaults . ,kw_defaults)
+;         (kwarg ,kwarg . ,kwarg-type)
+;         (defaults . ,defaults))
+;
+;      `(Arguments
+;         (args . ,ids)
+;         (arg-types . ,arg-types)
+;         (vararg ,vararg . ,vararg-type) 
+;         (kwonlyargs . ,kwonlyargs) 
+;         (kwonlyarg-types . ,kwonlyarg-types)
+;         (kw_defaults . ,kw_defaults)
+;         (kwarg ,kwarg . ,kwarg-type)
+;         (defaults . ,defaults))
+;        ]))
+;  
+;       
+;  (match stmt
+;    
+;    [`(FunctionDef 
+;       (name ,id)
+;       (args ,args)
+;       (body . ,body)
+;       (decorator_list . ,decorators)
+;       (returns ,returns))
+;
+;
+;     `(FunctionDef 
+;       (name ,id)
+;       (args ,args)
+;       (body . ,body)
+;       (decorator_list . ,decorators)
+;       (returns ,returns))
+;     
+;    [else (list stmt)]))
 
 
 
@@ -302,7 +301,7 @@
 
 (set! prog (walk-module prog #:transform-stmt lift-decorators))
 
-(set! prog (walk-module prog #:transform-stmt lift-defaults))
+;(set! prog (walk-module prog #:transform-stmt lift-defaults))
 
 ;(set! prog (walk-module prog #:transform-stmt lift-annotations))
 
