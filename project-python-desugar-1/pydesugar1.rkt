@@ -39,9 +39,9 @@
          (vararg ,vararg . ,vararg-type) 
          (kwonlyargs . ,kwonlyargs) 
          (kwonlyarg-types . ,kwonlyarg-types)
-         (kw_defaults . ,(if (empty? kwonlyargs) '() '(#f)))
+         (kw_defaults . ,(if (empty? kwonlyargs) '() (make-list (length kwonlyargs) #f)))
          (kwarg ,kwarg . ,kwarg-type)
-         (defaults . ,(if (empty? ids) '() '(#f)))))
+         (defaults . ,(if (empty? ids) '() (make-list (length ids) #f)))))
         ]))
 
   (define (args-empty? arguments)
@@ -86,6 +86,24 @@
        
        (empty? kwonlyargs)]))
 
+  (define (extract-kwonly-args kwonly-args kwonly-defaults)
+    (define keys '())
+    (for/list ([i kwonly-defaults] [j kwonly-args])
+      (if (equal? i #f)
+          (void)
+            (set! keys (append keys `(,j)))))
+     keys)
+
+  (define (extract-kwonly-defaults kwonly-args kwonly-defaults)
+    (define keys '())
+    (for/list ([i kwonly-defaults] [j kwonly-args])
+      (if (equal? i #f)
+          (void)
+            (set! keys (append keys `(,i)))))
+     keys)
+
+
+
   (define (get-kwdefaults arguments)
     (match arguments
       [`(Arguments
@@ -98,7 +116,8 @@
          (kwarg ,kwarg . ,kwarg-type)
          (defaults . ,defaults))
        
-       kw_defaults]))
+       `((,@(extract-kwonly-args kwonlyargs kw_defaults))
+         (,@(extract-kwonly-defaults kwonlyargs kw_defaults)))]))
   
        
   (match stmt
@@ -125,7 +144,10 @@
             (targets 
               (Attribute
                  (Name ,id) __kwdefaults__))
-             (value ,(if (kwonly-empty? args) '(NameConstant None) `(Tuple ,@(get-kwdefaults args))))))]
+             (value ,(if (kwonly-empty? args) '(NameConstant None) `(Dict 
+                                                                     (keys ,@(map (lambda (x) 
+                                                                                 `(Str ,(symbol->string x))) (car (get-kwdefaults args))))
+                                                                     (values ,@(cadr (get-kwdefaults args))))))))]
 
 
      [else (list stmt)]))
@@ -172,12 +194,12 @@
          (kwarg ,kwarg . ,kwarg-type)
          (defaults . ,defaults))
        
-       `((,@(if (equal? vararg-type #f) '() `(,vararg))
-          ,@(if (equal? kwarg-type #f) '() `(,kwarg))
+       `((,@(if (equal? vararg-type '()) '() `(,vararg))
+          ,@(if (equal? kwarg-type '()) '() `(,kwarg))
           ,@(extract-args kwonlyargs kwonlyarg-types)
           ,@(extract-args ids arg-types))
-         (,@(if (equal? vararg-type #f) '() vararg-type)
-          ,@(if (equal? kwarg-type #f) '() kwarg-type)
+         (,@(if (equal? vararg-type '()) '() vararg-type)
+          ,@(if (equal? kwarg-type '()) '() kwarg-type)
           ,@(extract-argtypes kwonlyargs kwonlyarg-types)
           ,@(extract-argtypes ids arg-types)))]))
 
@@ -203,9 +225,9 @@
            (Name ,id) __annotations__))
          (value 
            (Dict
-             (keys ,@(if (empty? returns) '() `((Str "return")))
+             (keys ,@(if (equal? returns #f) '() `((Str "return")))
                    ,@(map (lambda (x)  `(Str ,(symbol->string x))) (car (get-types args))))
-             (values ,returns
+             (values ,@(if (equal? returns #f) '() returns)
                      ,@(cadr (get-types args)))))))]
      
      

@@ -22,6 +22,8 @@ if [ $1 = "-f" ]; then
     done < out
 
     echo "$foo"
+elif [ $1 = "-fr" ]; then
+    racket ../python-compiler/pylex.zo < $2 | racket ../python-compiler/pyparse.zo | ./pydesugar1
 else
     echo $@ | racket ../python-compiler/pylex.zo | racket ../python-compiler/pyparse.zo | ./pydesugar1
 fi
