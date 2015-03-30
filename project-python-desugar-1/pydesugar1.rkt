@@ -56,7 +56,7 @@
          (kwarg ,kwarg . ,kwarg-type)
          (defaults . ,defaults))
        
-       (empty? ids)]))
+       (or (empty? defaults) (equal? (car defaults) #f))]))
 
   (define (get-defaults arguments)
     (match arguments
@@ -70,7 +70,7 @@
          (kwarg ,kwarg . ,kwarg-type)
          (defaults . ,defaults))
        
-       defaults]))
+       (extract-kwonly-defaults ids defaults)]))
 
   (define (kwonly-empty? arguments)
     (match arguments
@@ -229,6 +229,7 @@
                    ,@(map (lambda (x)  `(Str ,(symbol->string x))) (car (get-types args))))
              (values ,@(if (equal? returns #f) '() returns)
                      ,@(cadr (get-types args)))))))]
+
      
      
     
