@@ -2,16 +2,20 @@
 if [ $1 = "-f" ]; then
 		./run -f $2 > testAutomationOurFile
 		./rdesugar -f $2 > testAutomationRefFile
-		comm -3 testAutomationOurFile testAutomationRefFile	
+		comm -3 testAutomationOurFile testAutomationRefFile
+elif [ $1 = "-fd" ]; then
+		./run -f $2 > testAutomationOurFile
+		./rdesugar -f $2 > testAutomationRefFile
+		diff -EbwBay --strip-trailing-cr testAutomationOurFile testAutomationRefFile
 else
 		FILES=$1/*
 
 		for f in $FILES
 		do
 			echo "$f"
-			./run -f $1 > testAutomationOurFile
-		  ./rdesugar -f $1 > testAutomationRefFile
-		  comm -3 testAutomationOurFile testAutomationRefFile	
+			./run -f $f > testAutomationOurFile
+			./rdesugar -f $f > testAutomationRefFile
+		        comm -3 testAutomationOurFile testAutomationRefFile	
 		done
 fi
 

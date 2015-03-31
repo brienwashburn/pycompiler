@@ -84,7 +84,7 @@
          (kwarg ,kwarg . ,kwarg-type)
          (defaults . ,defaults))
        
-       (empty? kwonlyargs)]))
+       (or (empty? kw_defaults) (equal? (car kw_defaults) #f))]))
 
   (define (extract-kwonly-args kwonly-args kwonly-defaults)
     (define keys '())
@@ -166,13 +166,39 @@
 (define (lift-annotations stmt)
 
   ; <similar local definitions as lift-defaults>
+
+  (define (strip-types! arguments)
+    (match arguments
+      [`(Arguments
+         (args . ,ids)
+         (arg-types . ,arg-types)
+         (vararg ,vararg . ,vararg-type) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,kwonlyarg-types)
+         (kw_defaults . ,kw_defaults)
+         (kwarg ,kwarg . ,kwarg-type)
+         (defaults . ,defaults))
+
+      `((Arguments
+         (args . ,ids)
+         (arg-types . ,(if (empty? arg-types) '() (make-list (length arg-types) #f)))
+         (vararg ,vararg) 
+         (kwonlyargs . ,kwonlyargs) 
+         (kwonlyarg-types . ,(if (empty? kwonlyarg-types) '() (make-list (length kwonlyarg-types) #f)))
+         (kw_defaults . ,kw_defaults)
+         (kwarg ,kwarg )
+         (defaults . ,defaults)))
+        ]))
+
+
+
   (define (extract-args args arg-types)
     (define keys '())
     (for/list ([i arg-types] [j args])
       (if (equal? i #f)
           (void)
             (set! keys (append keys `(,j)))))
-     keys)
+     (reverse keys))
 
   (define (extract-argtypes args arg-types)
     (define keys '())
@@ -180,7 +206,7 @@
       (if (equal? i #f)
           (void)
           (set! keys (append keys `(,i)))))
-     keys)
+     (reverse keys))
 
   (define (get-types arguments)
     (match arguments
@@ -215,10 +241,10 @@
 
      `((FunctionDef 
        (name ,id)
-       (args ,args)
+       (args ,@(strip-types! args))
        (body . ,body)
        (decorator_list . ,decorators)
-       (returns ,returns))
+       (returns #f))
        (Assign
          (targets
           (Attribute
@@ -227,7 +253,7 @@
            (Dict
              (keys ,@(if (equal? returns #f) '() `((Str "return")))
                    ,@(map (lambda (x)  `(Str ,(symbol->string x))) (car (get-types args))))
-             (values ,@(if (equal? returns #f) '() returns)
+             (values ,@(if (equal? returns #f) '() `(,returns))
                      ,@(cadr (get-types args)))))))]
 
      
