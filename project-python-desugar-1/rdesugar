@@ -6,7 +6,7 @@ if [ $1 = "-f" ]; then
     foo=""
     parencount=""
     NEWLINE=$'\n'
-    while read -n1 char
+   while read -n1 char
     do
 	if [ "$char" == "(" ]; then
 	    parencount="$parencount "

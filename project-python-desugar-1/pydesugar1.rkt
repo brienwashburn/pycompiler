@@ -343,22 +343,47 @@
 
 ;;; Flatten assignments
 (define (flatten-assign stmt)
+  (define tmp0 (tmp))
+  (define index -1)
   (match stmt
     [`(Assign (targets (Name ,id)) (value ,expr))
      (list stmt)]
     
     [`(Assign (targets (,(or 'Tuple 'List) . ,exprs)) (value ,expr))
-     (error "finish me")]
+     
+    `(,(assign `(Name ,tmp0)
+                (call `(Name list) 
+                      `(,expr)))
+      ,@(map (lambda (x)  
+		(match x 
+		  [(list 'Name x) (begin (set! index (+ index 1))
+					 (assign `(Name ,x) `(Subscript (Name ,tmp0) (Index (Num ,index)))))]
+		  [(list 'Starred q) (begin (define tmpind (+ 1 index))
+                                            (if (< tmpind 0) (set! index (+ 1 index)) (set! index (+ 1 (- index (length exprs)))))
+					    (assign q 
+						 `(Subscript (Name ,tmp0) 
+						    (Slice (Num ,tmpind)
+							   ,(cond 
+                                                              [(equal? tmpind -1) #f]
+                                                              [(< tmpind 0) `(Num ,(+ tmpind 1))]
+							      [else  `(Num ,(+ 1 (- tmpind (length exprs))))])
+							    #f))))]))
+                               exprs))]
        
     [`(Assign (targets ,t1 ,t2 . ,ts) (value ,expr))
-     (error "finish me")]
+
+    `(,(assign `(Name ,tmp0)
+                      expr)
+       ,@(map (lambda (x) 
+                (assign x `(Name ,tmp0))) `(,t1 ,t2 . ,ts)))] 
      
     [else (list stmt)]))
 
 
-
 ;;; Convert for to while
 (define (eliminate-for stmt)
+  (define tmp1 (tmp))
+  (define tmp2 (tmp)) 
   (match stmt
     
     ; (For (target <expr>) (iter <expr>) (body <stmt>*) (orelse <stmt>*))
@@ -366,10 +391,22 @@
            (iter ,iter)
            (body . ,body)
            (orelse . ,orelse))
-     
-     (error "todo: build a while stmt")]
+      `(,(assign `(Name ,tmp1) `(GeneratorExp (Name ,tmp2) (for (Name ,tmp2) in ,iter if)))
+         (While 
+           (test
+             (NameConstant True))
+           (body
+             (Try
+               (body ,(assign target (call `(Attribute (Name ,tmp2) __next__) '())))
+               (handlers 
+                 (except 
+                   (Name StopIteration) #f
+                   (Break)))
+               (orelse)
+               (finalbody))
+             ,@body)
+             (orelse . ,orelse)))]
               
-    
     [else    (list stmt)]))
 
 
@@ -441,10 +478,31 @@
     [else expr]))
 
 
+(define (call-more fun args kwarg)
+  `(Call (func ,fun)
+          (args . ,args)
+          (keywords) 
+          (starargs #f)
+          (kwargs . ,kwarg)))
 
 
 (define (eliminate-classes-stmt stmt)
-  
+  (define tmp1 (tmp)) 
+  (define tmp2 (tmp)) 
+  (define tmp3 (tmp)) 
+  (define tmp4 (tmp)) 
+
+  (define (extract-locals bdy)
+   (match bdy
+     [`(Assign (targets (Name ,var)) (value ,val)) 
+        
+       (assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string var)))) val)]))
+
+  (define (extract-local-variables bdy)
+   (match bdy
+     [`(Assign (targets ,var) (value ,val)) `(,var)]))
+
+
   (match stmt
     [`(ClassDef
        (name ,id)
@@ -455,7 +513,31 @@
        (body . ,body)
        (decorator_list . ,decorators))
      
-     (error "complete me!")]
+     (car `(((FunctionDef 
+       (name ,tmp1)
+       (args
+         (Arguments 
+	     (args ,tmp2) 
+	     (arg-types #f) 
+	     (vararg ,tmp3) 
+	     (kwonlyargs metaclass) 
+	     (kwonlyarg-types #f) 
+	     (kw_defaults 
+	      (Name type)) 
+	     (kwarg ,tmp4) 
+	     (defaults 
+	      (Name object))))
+       (body ,(assign `(Name __dict__) `(Dict (keys) (values)))
+             ,@body
+             (Return ,(call-more `(Name metaclass) 
+                           `((Str ,(symbol->string id)) 
+                                  (BinOp (Tuple (Name ,tmp2)) Add (Name ,tmp3)) 
+                                  (Name __dict__)) `((Name ,tmp4)))))]
+       (decorator_list))
+       ,(assign `(Name ,id) (call `(Name ,tmp1) bases))))]
+;          ,(assign `(Name __dict__) `(Dict (keys) (values)))
+;        (Local ) ;(map extract-local-variables body))
+;        ,@(map extract-locals body))))]
     
     [else  (list stmt)]))
 
@@ -478,14 +560,14 @@
 
 (set! prog (walk-module prog #:transform-stmt lift-annotations))
 
-;(set! prog (walk-module prog #:transform-stmt eliminate-for))
+(set! prog (walk-module prog #:transform-stmt eliminate-for))
 
-;(set! prog (walk/fix prog #:transform-stmt flatten-assign))
+(set! prog (walk/fix prog #:transform-stmt flatten-assign))
 
 
-;(set! prog (walk-module prog #:transform-expr/bu eliminate-classes-expr))
+(set! prog (walk-module prog #:transform-expr/bu eliminate-classes-expr))
 
-;(set! prog (walk-module prog #:transform-stmt eliminate-classes-stmt))
+(set! prog (walk-module prog #:transform-stmt eliminate-classes-stmt))
 
 
 (write prog)
