@@ -3,9 +3,9 @@ class X(y):
     def methods(self):
 	return (self.methodA(), self.methodB())
 
-#x = X()
+x = X()
 
-#print(x.y)
+print(x.y)
 
-#def f(x) -> int:
-#    return 1
+def f(x) -> int:
+    return 1
