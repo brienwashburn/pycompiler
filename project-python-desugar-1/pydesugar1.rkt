@@ -482,14 +482,8 @@
          `(Subscript ,$fields (Index (Str ,(symbol->string var))))
          expr)]
 
-    [`(FunctionDef ,var) 
-     ; =>
-     `(BUTTFACTORY)]
-         ;`(Subscript ,$fields (Index (Str ,(symbol->string var))))]
 
-    [else (begin (write expr)
-                 (write `(BUTTFACTORY))
-                 expr)]))
+    [else expr]))
 
 
 (define (call-more fun args kwarg)
@@ -507,15 +501,31 @@
   (define tmp4 (tmp)) 
   (define false #f)
 
-  (define (extract-locals bdy)
-   (match bdy
-     [`(Assign (targets (Name ,var)) (value ,val)) 
-        
-       (assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string var)))) val)]))
+  (define (extract-methods funcdef)
+   (match funcdef
+     [`(FunctionDef 
+         (name ,name)
+         (,a)
+         (,b)
+         (,d) 
+         (,r))
 
-  (define (extract-local-variables bdy)
-   (match bdy
-     [`(Assign (targets ,var) (value ,val)) `(,var)]))
+       (assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name)))) `(Name ,name))]
+    [else '(BUTWORLD)]))
+        
+
+   
+
+(define (extract bdy bases)
+  (if (empty? bdy) 
+      bases
+      (match (car bdy)
+    [ (list 'FunctionDef (list 'name name) a b c d)
+
+      (extract (cdr bdy) 
+               (append bases `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))                           
+                                        `(Name ,name)))))]
+     [else (if (empty? bdy) bases (extract (cdr bdy) bases))])))
 
 
   (match stmt
@@ -542,6 +552,7 @@
 	     (defaults (Name object))))
        (body ,(assign `(Name __dict__) `(Dict (keys) (values)))
              ,@body
+             ,@(extract body '())
              (Return ,(call-more `(Name metaclass) 
                            `((Str ,(symbol->string id)) 
                                   (BinOp (Tuple (Name ,tmp2)) Add (Name ,tmp3)) 
@@ -574,7 +585,7 @@
 
 (set! prog (walk/fix prog #:transform-stmt flatten-assign))
 
-(set! prog (walk/fix prog #:transform-expr/bu eliminate-classes-expr))
+(set! prog (walk-module prog #:transform-expr/bu eliminate-classes-expr))
 
 (set! prog (walk-module prog #:transform-stmt eliminate-classes-stmt))
 
