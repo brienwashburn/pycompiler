@@ -391,17 +391,24 @@
            (iter ,iter)
            (body . ,body)
            (orelse . ,orelse))
+
       `(,(assign `(Name ,tmp1) `(GeneratorExp (Name ,tmp2) (for (Name ,tmp2) in ,iter if)))
          (While 
            (test
-             (NameConstant True))
+             (Compare 
+              (left
+                (Name ,tmp1))
+              (ops IsNot)
+              (comparators
+                (NameConstant False))))
            (body
              (Try
-               (body ,(assign target (call `(Attribute (Name ,tmp2) __next__) '())))
+               (body ,(assign target (call `(Attribute (Name ,tmp1) __next__) '())))
                (handlers 
                  (except 
                    (Name StopIteration) #f
-                   (Break)))
+                 ,(assign `(Name ,tmp1) '(NameConstant False))
+                 (Continue)))
                (orelse)
                (finalbody))
              ,@body)
@@ -474,8 +481,15 @@
      (if (and (set-member? (local-vars) var) (eq? (var-scope) 'class))
          `(Subscript ,$fields (Index (Str ,(symbol->string var))))
          expr)]
-    
-    [else expr]))
+
+    [`(FunctionDef ,var) 
+     ; =>
+     `(BUTTFACTORY)]
+         ;`(Subscript ,$fields (Index (Str ,(symbol->string var))))]
+
+    [else (begin (write expr)
+                 (write `(BUTTFACTORY))
+                 expr)]))
 
 
 (define (call-more fun args kwarg)
@@ -519,26 +533,22 @@
        (args
          (Arguments 
 	     (args ,tmp2) 
-	     (arg-types false) 
+	     (arg-types ,false) 
 	     (vararg ,tmp3) 
 	     (kwonlyargs metaclass) 
-	     (kwonlyarg-types false) 
-	     (kw_defaults 
-	      (Name type)) 
+	     (kwonlyarg-types ,false) 
+	     (kw_defaults (Name type))
 	     (kwarg ,tmp4) 
-	     (defaults 
-	      (Name object))))
+	     (defaults (Name object))))
        (body ,(assign `(Name __dict__) `(Dict (keys) (values)))
              ,@body
              (Return ,(call-more `(Name metaclass) 
                            `((Str ,(symbol->string id)) 
                                   (BinOp (Tuple (Name ,tmp2)) Add (Name ,tmp3)) 
                                   (Name __dict__)) `((Name ,tmp4)))))
-       (decorator_list))
+       (decorator_list)
+       (returns #f))
        ,(assign `(Name ,id) (call `(Name ,tmp1) bases)))]
-;          ,(assign `(Name __dict__) `(Dict (keys) (values)))
-;        (Local ) ;(map extract-local-variables body))
-;        ,@(map extract-locals body))))]
     
     [else  (list stmt)]))
 
@@ -555,9 +565,8 @@
 
 ;; Uncomment each of these as you finish them:
 
-(set! prog (walk-module prog #:transform-stmt lift-decorators))
 
-(set! prog (walk-module prog #:transform-stmt lift-defaults))
+(set! prog (walk-module prog #:transform-stmt lift-decorators))
 
 (set! prog (walk-module prog #:transform-stmt lift-annotations))
 
@@ -565,10 +574,13 @@
 
 (set! prog (walk/fix prog #:transform-stmt flatten-assign))
 
-
-(set! prog (walk-module prog #:transform-expr/bu eliminate-classes-expr))
+(set! prog (walk/fix prog #:transform-expr/bu eliminate-classes-expr))
 
 (set! prog (walk-module prog #:transform-stmt eliminate-classes-stmt))
+
+;(set! prog (walk-module prog #:transform-stmt eliminate-classes-stmt))
+
+(set! prog (walk-module prog #:transform-stmt lift-defaults))
 
 
 (write prog)

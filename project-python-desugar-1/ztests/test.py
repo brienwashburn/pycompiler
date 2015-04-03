@@ -1,2 +1,1 @@
-def f(x):
-    return a + 1
+def f(x=object, *y, z=type): pass
