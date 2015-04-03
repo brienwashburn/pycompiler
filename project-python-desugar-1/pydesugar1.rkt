@@ -514,7 +514,7 @@
        (body . ,body)
        (decorator_list . ,decorators))
      
-     `(((FunctionDef 
+     `((FunctionDef 
        (name ,tmp1)
        (args
          (Arguments 
@@ -535,7 +535,7 @@
                                   (BinOp (Tuple (Name ,tmp2)) Add (Name ,tmp3)) 
                                   (Name __dict__)) `((Name ,tmp4)))))
        (decorator_list))
-       ,(assign `(Name ,id) (call `(Name ,tmp1) bases))))]
+       ,(assign `(Name ,id) (call `(Name ,tmp1) bases)))]
 ;          ,(assign `(Name __dict__) `(Dict (keys) (values)))
 ;        (Local ) ;(map extract-local-variables body))
 ;        ,@(map extract-locals body))))]
