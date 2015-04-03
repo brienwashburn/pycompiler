@@ -491,6 +491,7 @@
   (define tmp2 (tmp)) 
   (define tmp3 (tmp)) 
   (define tmp4 (tmp)) 
+  (define false #f)
 
   (define (extract-locals bdy)
    (match bdy
@@ -513,15 +514,15 @@
        (body . ,body)
        (decorator_list . ,decorators))
      
-     (car `(((FunctionDef 
+     `(((FunctionDef 
        (name ,tmp1)
        (args
          (Arguments 
 	     (args ,tmp2) 
-	     (arg-types #f) 
+	     (arg-types false) 
 	     (vararg ,tmp3) 
 	     (kwonlyargs metaclass) 
-	     (kwonlyarg-types #f) 
+	     (kwonlyarg-types false) 
 	     (kw_defaults 
 	      (Name type)) 
 	     (kwarg ,tmp4) 
@@ -532,7 +533,7 @@
              (Return ,(call-more `(Name metaclass) 
                            `((Str ,(symbol->string id)) 
                                   (BinOp (Tuple (Name ,tmp2)) Add (Name ,tmp3)) 
-                                  (Name __dict__)) `((Name ,tmp4)))))]
+                                  (Name __dict__)) `((Name ,tmp4)))))
        (decorator_list))
        ,(assign `(Name ,id) (call `(Name ,tmp1) bases))))]
 ;          ,(assign `(Name __dict__) `(Dict (keys) (values)))
