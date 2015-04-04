@@ -502,6 +502,24 @@
   (define tmp4 (tmp)) 
   (define false #f)
 
+(define (extract bdy bases)
+  (if (empty? bdy) 
+      bases
+      (match (car bdy)
+    [ (list 'FunctionDef (list 'name name) a b c d)
+
+      (extract (cdr bdy) 
+               (append bases `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))                           
+                                        `(Name ,name)))))]
+
+    [ (list 'ClassDef (list 'name name) a b c d e f)
+
+      (extract (cdr bdy) 
+               (append bases `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))                           
+                                        `(Name ,name)))))]
+    [else (if (empty? bdy) bases (extract (cdr bdy) bases))])))
+
+
 (define (ext bdy out)
   (if (empty? bdy) 
       out
@@ -517,7 +535,9 @@
                                                   `(Name ,name)))))]
 
     [else (ext (cdr bdy) (append out `(,(car bdy))))])))
- 
+    
+
+
   (match stmt
     [`(ClassDef
        (name ,id)
@@ -576,15 +596,9 @@
 
 (set! prog (walk-module prog #:transform-expr/bu eliminate-classes-expr))
 
-<<<<<<< HEAD
-(set! prog (walk-module prog #:transform-stmt eliminate-classes-stmt))
-=======
 (set! prog (walk/fix prog #:transform-stmt eliminate-classes-stmt))
->>>>>>> a58b7db047728760158b4442170176000bc4b90f
 
 (set! prog (walk-module prog #:transform-stmt lift-defaults))
-
-(set! prog (walk/fix prog #:transform-stmt eliminate-classes-stmt))
 
 
 
