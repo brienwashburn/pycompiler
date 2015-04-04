@@ -486,6 +486,7 @@
     [else expr]))
 
 
+
 (define (call-more fun args kwarg)
   `(Call (func ,fun)
           (args . ,args)
@@ -501,21 +502,6 @@
   (define tmp4 (tmp)) 
   (define false #f)
 
-  (define (extract-methods funcdef)
-   (match funcdef
-     [`(FunctionDef 
-         (name ,name)
-         (,a)
-         (,b)
-         (,d) 
-         (,r))
-
-       (assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name)))) `(Name ,name))]
-    [else '(BUTWORLD)]))
-        
-
-   
-
 (define (extract bdy bases)
   (if (empty? bdy) 
       bases
@@ -523,9 +509,39 @@
     [ (list 'FunctionDef (list 'name name) a b c d)
 
       (extract (cdr bdy) 
+<<<<<<< HEAD
                (append bases `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))
 																			 `(Name ,name)))))]
      [else (if (empty? bdy) bases (extract (cdr bdy) bases))])))
+=======
+               (append bases `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))                           
+                                        `(Name ,name)))))]
+
+    [ (list 'ClassDef (list 'name name) a b c d e f)
+
+      (extract (cdr bdy) 
+               (append bases `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))                           
+                                        `(Name ,name)))))]
+    [else (if (empty? bdy) bases (extract (cdr bdy) bases))])))
+
+
+(define (ext bdy out)
+  (if (empty? bdy) 
+      out
+    (match (car bdy)
+    [ (list 'FunctionDef (list 'name name) a b c d)
+
+               (ext (cdr bdy) (append out `(,(car bdy)) `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))
+                                                  `(Name ,name)))))]
+
+    [ (list 'ClassDef (list 'name name) a b c d e f) 
+
+               (ext (cdr bdy) (append out `(,(car bdy)) `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))
+                                                  `(Name ,name)))))]
+
+    [else (ext (cdr bdy) (append out `(,(car bdy))))])))
+    
+>>>>>>> a58b7db047728760158b4442170176000bc4b90f
 
 
   (match stmt
@@ -551,15 +567,14 @@
 	     (kwarg ,tmp4) 
 	     (defaults (Name object))))
        (body ,(assign `(Name __dict__) `(Dict (keys) (values)))
-             ,@body
-             ,@(extract body '())
+            ,@(ext body '())
              (Return ,(call-more `(Name metaclass) 
                            `((Str ,(symbol->string id)) 
                                   (BinOp (Tuple (Name ,tmp2)) Add (Name ,tmp3)) 
                                   (Name __dict__)) `((Name ,tmp4)))))
        (decorator_list)
        (returns #f))
-       ,(assign `(Name ,id) (call `(Name ,tmp1) bases)))]
+       ,(assign `(Name ,id) `(Call (func (Name ,tmp1)) (args . ,bases) (keywords . ,keywords) (starargs ,starargs) (kwargs ,kwargs))))]
     
     [else  (list stmt)]))
 
@@ -587,11 +602,16 @@
 
 (set! prog (walk-module prog #:transform-expr/bu eliminate-classes-expr))
 
+<<<<<<< HEAD
 (set! prog (walk-module prog #:transform-stmt eliminate-classes-stmt))
+=======
+(set! prog (walk/fix prog #:transform-stmt eliminate-classes-stmt))
+>>>>>>> a58b7db047728760158b4442170176000bc4b90f
 
 (set! prog (walk-module prog #:transform-stmt lift-defaults))
 
 (set! prog (walk/fix prog #:transform-stmt eliminate-classes-stmt))
+
 
 
 (write prog)
