@@ -523,8 +523,8 @@
     [ (list 'FunctionDef (list 'name name) a b c d)
 
       (extract (cdr bdy) 
-               (append bases `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))                           
-                                        `(Name ,name)))))]
+               (append bases `(,(assign `(Subscript (Name __dict__) (Index (Str ,(symbol->string name))))
+																			 `(Name ,name)))))]
      [else (if (empty? bdy) bases (extract (cdr bdy) bases))])))
 
 
@@ -589,9 +589,9 @@
 
 (set! prog (walk-module prog #:transform-stmt eliminate-classes-stmt))
 
-;(set! prog (walk-module prog #:transform-stmt eliminate-classes-stmt))
-
 (set! prog (walk-module prog #:transform-stmt lift-defaults))
+
+(set! prog (walk/fix prog #:transform-stmt eliminate-classes-stmt))
 
 
 (write prog)
