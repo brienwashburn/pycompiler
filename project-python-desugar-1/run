@@ -1,0 +1,29 @@
+#!/bin/bash 
+if [ $1 = "-f" ]; then
+    racket ../python-compiler/pylex.zo < $2 | racket ../python-compiler/pyparse.zo | ./pydesugar1 > out
+    foo=""
+    parencount=""
+    NEWLINE=$'\n'
+    while read -n1 char
+    do
+	if [ "$char" == "(" ]; then
+	    parencount="$parencount "
+	    foo="$foo$NEWLINE$parencount$char"
+	elif [ "$char" == ")" ]; then
+	    parencount=${parencount:0:${#parencount} - 1}
+	    foo="$foo$char"
+	elif [ "$char" == "$space" ]; then
+	    foo="$foo "
+	else
+	    foo="$foo$char"
+	fi
+
+	
+    done < out
+
+    echo "$foo"
+elif [ $1 = "-fr" ]; then
+    racket ../python-compiler/pylex.zo < $2 | racket ../python-compiler/pyparse.zo | ./pydesugar1
+else
+    echo $@ | racket ../python-compiler/pylex.zo | racket ../python-compiler/pyparse.zo | ./pydesugar1
+fi
