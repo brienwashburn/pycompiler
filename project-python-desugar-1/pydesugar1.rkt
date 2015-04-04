@@ -291,7 +291,7 @@
         (body . ,body)
         (decorator_list)
         (returns ,returns))
-        ,@(map (lambda (x) 
+        ,@(reverse (map (lambda (x) 
            `(Assign
 	    (targets 
 	      (Name ,id))
@@ -301,7 +301,7 @@
                (args (Name ,id))
                (keywords)
                (starargs #f)
-               (kwargs #f))))) decorators))
+               (kwargs #f))))) decorators)))
 ]
      
      [`(ClassDef
@@ -321,7 +321,7 @@
         (kwargs ,kwargs)
         (body . ,body)
         (decorator_list . ,decorators))
-        ,@(map (lambda (x) 
+        ,@(reverse (map (lambda (x) 
            `(Assign
 	    (targets 
 	      (Name ,id))
@@ -331,7 +331,7 @@
                (args (Name ,id))
                (keywords)
                (starargs #f)
-               (kwargs #f))))) decorators))
+               (kwargs #f))))) decorators)))
 ]
 
     [else     (list stmt)]))
