@@ -1,3 +1,4 @@
+;;; Author: Tim Knutson - u0851247
 #lang racket
 
 
@@ -604,3 +605,4 @@
 
 (write prog)
 
+;;; Author: Tim Knutson - u0851247
