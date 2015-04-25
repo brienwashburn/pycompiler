@@ -3,7 +3,9 @@
 
 (require pywalk)
 
-(require (file "/usr/local/share/python-compiler/pysugarp3_rkt.zo"))
+;(define false #f)
+
+(require (file "../python-compiler/pysugarp3_rkt.zo"))
 
 
 (define (eliminate-with stmt)
@@ -17,9 +19,19 @@
 
 (define (eliminate-assert stmt)
   (match stmt
-    
     [`(Assert . ,_)
      (error "TODO: eliminate assert")]
+    
+;    [`(Assert . ,cond)
+;      `(If (test (Name __debug__))
+;           (body (If (test (UnaryOp Not ,cond))
+;           (body (Raise (Call (func (Name AssertionError))
+;                              (args)
+;                              (keywords)
+;                              (starargs false)
+;                              (kwargs false))))
+;                         (orelse)))
+;                 (orelse))]
     
     [else (list stmt)]))
 
